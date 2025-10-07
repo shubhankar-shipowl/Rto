@@ -1,0 +1,8 @@
+/* Custom styles for RTO application */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove conflicting styles that interfere with Tailwind */

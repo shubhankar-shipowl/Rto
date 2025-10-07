@@ -1,0 +1,405 @@
+2025-10-07 12:24:42 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:42 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:42 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:42 +05:30: GNU long options:
+2025-10-07 12:24:42 +05:30: 	--debug
+2025-10-07 12:24:42 +05:30: 	--debugger
+2025-10-07 12:24:42 +05:30: 	--dump-po-strings
+2025-10-07 12:24:42 +05:30: 	--dump-strings
+2025-10-07 12:24:42 +05:30: 	--help
+2025-10-07 12:24:42 +05:30: 	--init-file
+2025-10-07 12:24:42 +05:30: 	--login
+2025-10-07 12:24:46 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:46 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:46 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:46 +05:30: GNU long options:
+2025-10-07 12:24:46 +05:30: 	--debug
+2025-10-07 12:24:46 +05:30: 	--debugger
+2025-10-07 12:24:46 +05:30: 	--dump-po-strings
+2025-10-07 12:24:46 +05:30: 	--dump-strings
+2025-10-07 12:24:46 +05:30: 	--help
+2025-10-07 12:24:46 +05:30: 	--init-file
+2025-10-07 12:24:46 +05:30: 	--login
+2025-10-07 12:24:46 +05:30: 	--noediting
+2025-10-07 12:24:46 +05:30: 	--noprofile
+2025-10-07 12:24:46 +05:30: 	--norc
+2025-10-07 12:24:46 +05:30: 	--posix
+2025-10-07 12:24:46 +05:30: 	--protected
+2025-10-07 12:24:46 +05:30: 	--rcfile
+2025-10-07 12:24:46 +05:30: 	--restricted
+2025-10-07 12:24:46 +05:30: 	--verbose
+2025-10-07 12:24:46 +05:30: 	--version
+2025-10-07 12:24:46 +05:30: 	--wordexp
+2025-10-07 12:24:46 +05:30: Shell options:
+2025-10-07 12:24:46 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:24:46 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:24:50 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:50 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:50 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:50 +05:30: GNU long options:
+2025-10-07 12:24:50 +05:30: 	--debug
+2025-10-07 12:24:50 +05:30: 	--debugger
+2025-10-07 12:24:50 +05:30: 	--dump-po-strings
+2025-10-07 12:24:50 +05:30: 	--dump-strings
+2025-10-07 12:24:50 +05:30: 	--help
+2025-10-07 12:24:50 +05:30: 	--init-file
+2025-10-07 12:24:50 +05:30: 	--login
+2025-10-07 12:24:50 +05:30: 	--noediting
+2025-10-07 12:24:50 +05:30: 	--noprofile
+2025-10-07 12:24:50 +05:30: 	--norc
+2025-10-07 12:24:50 +05:30: 	--posix
+2025-10-07 12:24:50 +05:30: 	--protected
+2025-10-07 12:24:50 +05:30: 	--rcfile
+2025-10-07 12:24:50 +05:30: 	--restricted
+2025-10-07 12:24:50 +05:30: 	--verbose
+2025-10-07 12:24:50 +05:30: 	--version
+2025-10-07 12:24:50 +05:30: 	--wordexp
+2025-10-07 12:24:50 +05:30: Shell options:
+2025-10-07 12:24:50 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:24:50 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:24:54 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:54 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:54 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:54 +05:30: GNU long options:
+2025-10-07 12:24:54 +05:30: 	--debug
+2025-10-07 12:24:54 +05:30: 	--debugger
+2025-10-07 12:24:54 +05:30: 	--dump-po-strings
+2025-10-07 12:24:54 +05:30: 	--dump-strings
+2025-10-07 12:24:54 +05:30: 	--help
+2025-10-07 12:24:54 +05:30: 	--init-file
+2025-10-07 12:24:54 +05:30: 	--login
+2025-10-07 12:24:54 +05:30: 	--noediting
+2025-10-07 12:24:54 +05:30: 	--noprofile
+2025-10-07 12:24:54 +05:30: 	--norc
+2025-10-07 12:24:54 +05:30: 	--posix
+2025-10-07 12:24:54 +05:30: 	--protected
+2025-10-07 12:24:54 +05:30: 	--rcfile
+2025-10-07 12:24:54 +05:30: 	--restricted
+2025-10-07 12:24:54 +05:30: 	--verbose
+2025-10-07 12:24:54 +05:30: 	--version
+2025-10-07 12:24:54 +05:30: 	--wordexp
+2025-10-07 12:24:54 +05:30: Shell options:
+2025-10-07 12:24:58 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:58 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:58 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:58 +05:30: GNU long options:
+2025-10-07 12:24:58 +05:30: 	--debug
+2025-10-07 12:24:58 +05:30: 	--debugger
+2025-10-07 12:24:58 +05:30: 	--dump-po-strings
+2025-10-07 12:24:58 +05:30: 	--dump-strings
+2025-10-07 12:24:58 +05:30: 	--help
+2025-10-07 12:24:58 +05:30: 	--init-file
+2025-10-07 12:24:58 +05:30: 	--login
+2025-10-07 12:24:58 +05:30: 	--noediting
+2025-10-07 12:24:58 +05:30: 	--noprofile
+2025-10-07 12:24:58 +05:30: 	--norc
+2025-10-07 12:24:58 +05:30: 	--posix
+2025-10-07 12:24:58 +05:30: 	--protected
+2025-10-07 12:24:58 +05:30: 	--rcfile
+2025-10-07 12:24:58 +05:30: 	--restricted
+2025-10-07 12:24:58 +05:30: 	--verbose
+2025-10-07 12:24:58 +05:30: 	--version
+2025-10-07 12:25:02 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:02 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:02 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:02 +05:30: GNU long options:
+2025-10-07 12:25:02 +05:30: 	--debug
+2025-10-07 12:25:02 +05:30: 	--debugger
+2025-10-07 12:25:02 +05:30: 	--dump-po-strings
+2025-10-07 12:25:02 +05:30: 	--dump-strings
+2025-10-07 12:25:02 +05:30: 	--help
+2025-10-07 12:25:02 +05:30: 	--init-file
+2025-10-07 12:25:02 +05:30: 	--login
+2025-10-07 12:25:02 +05:30: 	--noediting
+2025-10-07 12:25:02 +05:30: 	--noprofile
+2025-10-07 12:25:02 +05:30: 	--norc
+2025-10-07 12:25:02 +05:30: 	--posix
+2025-10-07 12:25:02 +05:30: 	--protected
+2025-10-07 12:25:02 +05:30: 	--rcfile
+2025-10-07 12:25:02 +05:30: 	--restricted
+2025-10-07 12:25:02 +05:30: 	--verbose
+2025-10-07 12:25:02 +05:30: 	--version
+2025-10-07 12:25:02 +05:30: 	--wordexp
+2025-10-07 12:25:02 +05:30: Shell options:
+2025-10-07 12:25:02 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:25:02 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:25:06 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:06 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:06 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:06 +05:30: GNU long options:
+2025-10-07 12:25:06 +05:30: 	--debug
+2025-10-07 12:25:06 +05:30: 	--debugger
+2025-10-07 12:25:06 +05:30: 	--dump-po-strings
+2025-10-07 12:25:06 +05:30: 	--dump-strings
+2025-10-07 12:25:06 +05:30: 	--help
+2025-10-07 12:25:06 +05:30: 	--init-file
+2025-10-07 12:25:06 +05:30: 	--login
+2025-10-07 12:25:06 +05:30: 	--noediting
+2025-10-07 12:25:06 +05:30: 	--noprofile
+2025-10-07 12:25:06 +05:30: 	--norc
+2025-10-07 12:25:06 +05:30: 	--posix
+2025-10-07 12:25:06 +05:30: 	--protected
+2025-10-07 12:25:06 +05:30: 	--rcfile
+2025-10-07 12:25:06 +05:30: 	--restricted
+2025-10-07 12:25:10 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:10 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:10 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:10 +05:30: GNU long options:
+2025-10-07 12:25:10 +05:30: 	--debug
+2025-10-07 12:25:10 +05:30: 	--debugger
+2025-10-07 12:25:10 +05:30: 	--dump-po-strings
+2025-10-07 12:25:10 +05:30: 	--dump-strings
+2025-10-07 12:25:10 +05:30: 	--help
+2025-10-07 12:25:10 +05:30: 	--init-file
+2025-10-07 12:25:10 +05:30: 	--login
+2025-10-07 12:25:10 +05:30: 	--noediting
+2025-10-07 12:25:10 +05:30: 	--noprofile
+2025-10-07 12:25:10 +05:30: 	--norc
+2025-10-07 12:25:10 +05:30: 	--posix
+2025-10-07 12:25:10 +05:30: 	--protected
+2025-10-07 12:25:10 +05:30: 	--rcfile
+2025-10-07 12:25:10 +05:30: 	--restricted
+2025-10-07 12:25:14 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:14 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:14 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:14 +05:30: GNU long options:
+2025-10-07 12:25:14 +05:30: 	--debug
+2025-10-07 12:25:14 +05:30: 	--debugger
+2025-10-07 12:25:14 +05:30: 	--dump-po-strings
+2025-10-07 12:25:14 +05:30: 	--dump-strings
+2025-10-07 12:25:14 +05:30: 	--help
+2025-10-07 12:25:14 +05:30: 	--init-file
+2025-10-07 12:25:14 +05:30: 	--login
+2025-10-07 12:25:14 +05:30: 	--noediting
+2025-10-07 12:25:14 +05:30: 	--noprofile
+2025-10-07 12:25:14 +05:30: 	--norc
+2025-10-07 12:25:14 +05:30: 	--posix
+2025-10-07 12:25:14 +05:30: 	--protected
+2025-10-07 12:25:14 +05:30: 	--rcfile
+2025-10-07 12:25:14 +05:30: 	--restricted
+2025-10-07 12:25:14 +05:30: 	--verbose
+2025-10-07 12:25:14 +05:30: 	--version
+2025-10-07 12:25:14 +05:30: 	--wordexp
+2025-10-07 12:25:14 +05:30: Shell options:
+2025-10-07 12:25:14 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:25:18 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:18 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:18 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:18 +05:30: GNU long options:
+2025-10-07 12:25:18 +05:30: 	--debug
+2025-10-07 12:25:18 +05:30: 	--debugger
+2025-10-07 12:25:18 +05:30: 	--dump-po-strings
+2025-10-07 12:25:18 +05:30: 	--dump-strings
+2025-10-07 12:25:18 +05:30: 	--help
+2025-10-07 12:25:18 +05:30: 	--init-file
+2025-10-07 12:25:18 +05:30: 	--login
+2025-10-07 12:25:18 +05:30: 	--noediting
+2025-10-07 12:25:18 +05:30: 	--noprofile
+2025-10-07 12:25:18 +05:30: 	--norc
+2025-10-07 12:25:18 +05:30: 	--posix
+2025-10-07 12:25:18 +05:30: 	--protected
+2025-10-07 12:25:18 +05:30: 	--rcfile
+2025-10-07 12:25:18 +05:30: 	--restricted
+2025-10-07 12:25:18 +05:30: 	--verbose
+2025-10-07 12:25:18 +05:30: 	--version
+2025-10-07 12:25:18 +05:30: 	--wordexp
+2025-10-07 12:25:18 +05:30: Shell options:
+2025-10-07 12:25:18 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:25:18 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:27:03 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 12:27:03 +05:30: [34mStarting backend server...[0m
+2025-10-07 12:27:03 +05:30: [32mBackend started successfully![0m
+2025-10-07 12:27:04 +05:30: [Backend] Server is running on port 5003
+2025-10-07 12:27:04 +05:30: [Backend] MySQL database connected successfully
+2025-10-07 12:27:05 +05:30: [Backend] Database synchronized
+2025-10-07 12:27:06 +05:30: [34mStarting frontend server...[0m
+2025-10-07 12:27:06 +05:30: [32mFrontend started successfully![0m
+2025-10-07 12:27:07 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 12:27:07 +05:30: > vite preview
+2025-10-07 12:27:07 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 12:27:07 +05:30: [Frontend] ➜  Network: http://192.168.1.7:4173/
+2025-10-07 12:27:11 +05:30: [32m✅ Frontend is running[0m
+2025-10-07 12:27:12 +05:30: [32m✅ Backend is running[0m
+2025-10-07 12:27:12 +05:30: [Backend] ::1 - - [07/Oct/2025:06:57:12 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "-"
+2025-10-07 12:27:13 +05:30: [32m🎉 RTO Application started successfully![0m
+2025-10-07 12:27:13 +05:30: [34mBackend: http://localhost:5003[0m
+2025-10-07 12:27:13 +05:30: [34mFrontend: http://localhost:4173[0m
+2025-10-07 12:27:13 +05:30: [34mPress Ctrl+C to stop the application[0m
+2025-10-07 12:33:17 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:17 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "curl/8.7.1"
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:44 +05:30: [Backend] RTO data found: false
+2025-10-07 12:33:44 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] ⏱️ getScanResultsByDate completed in 59ms for 0 results
+2025-10-07 12:33:44 +05:30: ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:33:44 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:45 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:45 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:45 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:45 +0000] "GET /api/rto/summary HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:35:03 +05:30: [33m
+2025-10-07 12:35:03 +05:30: Shutting down...[0m
+2025-10-07 12:35:03 +05:30: [33mStopping processes...[0m
+2025-10-07 12:35:03 +05:30: [32mProcesses stopped![0m
+2025-10-07 12:38:37 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 12:38:37 +05:30: [Backend Error] node:internal/modules/cjs/loader:1148
+2025-10-07 12:38:37 +05:30:   throw err;
+2025-10-07 12:38:37 +05:30:   ^
+2025-10-07 12:38:37 +05:30: 
+2025-10-07 12:38:37 +05:30: Error: Cannot find module '/Users/shubhankarhaldar/Desktop/rto/server/server/src/index.js'
+2025-10-07 12:38:37 +05:30:     at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+2025-10-07 12:38:37 +05:30:     at Module._load (node:internal/modules/cjs/loader:986:27)
+2025-10-07 12:38:37 +05:30:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)
+2025-10-07 12:38:37 +05:30:     at node:internal/main/run_main_module:28:49 {
+2025-10-07 12:38:37 +05:30:   code: 'MODULE_NOT_FOUND',
+2025-10-07 12:38:37 +05:30:   requireStack: []
+2025-10-07 12:38:37 +05:30: }
+2025-10-07 12:38:37 +05:30: 
+2025-10-07 12:38:37 +05:30: Node.js v20.16.0
+2025-10-07 12:38:37 +05:30: Backend process exited with code 1
+2025-10-07 12:38:37 +05:30: Restarting backend in 3 seconds...
+2025-10-07 12:38:38 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 12:38:38 +05:30: > vite preview
+2025-10-07 12:38:38 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 12:38:38 +05:30: [Frontend] ➜  Network: http://192.168.1.7:4173/
+2025-10-07 12:38:40 +05:30: [Backend Error] node:internal/modules/cjs/loader:1148
+2025-10-07 12:38:40 +05:30:   throw err;
+2025-10-07 12:38:40 +05:30:   ^
+2025-10-07 12:38:40 +05:30: 
+2025-10-07 12:38:40 +05:30: Error: Cannot find module '/Users/shubhankarhaldar/Desktop/rto/server/server/src/index.js'
+2025-10-07 12:38:40 +05:30:     at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+2025-10-07 12:38:40 +05:30:     at Module._load (node:internal/modules/cjs/loader:986:27)
+2025-10-07 12:38:40 +05:30:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)
+2025-10-07 12:38:40 +05:30:     at node:internal/main/run_main_module:28:49 {
+2025-10-07 12:38:40 +05:30:   code: 'MODULE_NOT_FOUND',
+2025-10-07 12:38:40 +05:30:   requireStack: []
+2025-10-07 12:38:40 +05:30: }
+2025-10-07 12:38:40 +05:30: 
+2025-10-07 12:38:40 +05:30: Node.js v20.16.0
+2025-10-07 12:39:31 +05:30: Shutting down...
+2025-10-07 12:39:36 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 12:39:36 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 12:39:36 +05:30: > vite preview
+2025-10-07 12:39:36 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 12:39:36 +05:30: [Frontend] ➜  Network: http://192.168.1.7:4173/
+2025-10-07 12:39:36 +05:30: [Backend] Server is running on port 5003
+2025-10-07 12:39:37 +05:30: [Backend] MySQL database connected successfully
+2025-10-07 12:39:37 +05:30: [Backend] Database synchronized
+2025-10-07 12:39:51 +05:30: [Backend] ::1 - - [07/Oct/2025:07:09:51 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "curl/8.7.1"
+2025-10-07 12:57:03 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:03 +0000] "POST /api/auth/login HTTP/1.1" 200 120 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:03 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:03 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:03 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:57:03 +05:30: [Backend] ⏱️ getScanResultsByDate completed in 318ms for 0 results
+2025-10-07 12:57:03 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:03 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 200 2 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:03 +05:30: [Backend] RTO data found: false
+2025-10-07 12:57:03 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:03 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:21 +05:30: [Backend Error] Error fetching overall upload summary: Error
+2025-10-07 12:57:21 +05:30:     at Query.run (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/mysql/query.js:52:25)
+2025-10-07 12:57:21 +05:30:     at /Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/sequelize.js:315:28
+2025-10-07 12:57:21 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 12:57:21 +05:30:     at async MySQLQueryInterface.select (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/abstract/query-interface.js:407:12)
+2025-10-07 12:57:21 +05:30:     at async RTOData.findAll (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/model.js:1140:21)
+2025-10-07 12:57:21 +05:30:     at async getOverallUploadSummary (/Users/shubhankarhaldar/Desktop/rto/server/controllers/rtoController.js:716:24) {
+2025-10-07 12:57:21 +05:30:   name: 'SequelizeDatabaseError',
+2025-10-07 12:57:21 +05:30:   parent: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: 'SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary`, `createdAt`, `updatedAt` FROM `rto_data` AS `RTOData`;',
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   original: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: 'SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary`, `createdAt`, `updatedAt` FROM `rto_data` AS `RTOData`;',
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   sql: 'SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary`, `createdAt`, `updatedAt` FROM `rto_data` AS `RTOData`;',
+2025-10-07 12:57:21 +05:30:   parameters: {}
+2025-10-07 12:57:21 +05:30: }
+2025-10-07 12:57:21 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:21 +0000] "GET /api/rto/summary HTTP/1.1" 500 52 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:21 +05:30: [Backend Error] Get RTO data error: Error
+2025-10-07 12:57:21 +05:30:     at Query.run (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/mysql/query.js:52:25)
+2025-10-07 12:57:21 +05:30:     at /Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/sequelize.js:315:28
+2025-10-07 12:57:21 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 12:57:21 +05:30:     at async MySQLQueryInterface.select (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/abstract/query-interface.js:407:12)
+2025-10-07 12:57:21 +05:30:     at async RTOData.findAll (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/model.js:1140:21)
+2025-10-07 12:57:21 +05:30:     at async RTOData.findOne (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/model.js:1240:12)
+2025-10-07 12:57:21 +05:30:     at async getRTODataByDate (/Users/shubhankarhaldar/Desktop/rto/server/controllers/rtoController.js:598:21) {
+2025-10-07 12:57:21 +05:30:   name: 'SequelizeDatabaseError',
+2025-10-07 12:57:21 +05:30:   parent: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: "SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary` FROM `rto_data` AS `RTOData` WHERE `RTOData`.`date` = '2025-10-07' LIMIT 1;",
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   original: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: "SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary` FROM `rto_data` AS `RTOData` WHERE `RTOData`.`date` = '2025-10-07' LIMIT 1;",
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   sql: "SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary` FROM `rto_data` AS `RTOData` WHERE `RTOData`.`date` = '2025-10-07' LIMIT 1;",
+2025-10-07 12:57:21 +05:30:   parameters: {}
+2025-10-07 12:57:21 +05:30: }
+2025-10-07 12:57:21 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:21 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 500 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:21 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:21 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:21 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:21 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:57:21 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:21 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:22 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:22 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: ⏱️ getScanResultsByDate (cached) completed in 1ms for 0 results
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: RTO data found: false
+2025-10-07 12:57:28 +05:30: ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:33 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:33 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:57:33 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:33 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:33 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:57:33 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:33 +0000] "GET /api/rto/scans/2025-10-07?t=1759822053496&r=co2dzc&nocache=1 HTTP/1.1" 200 2 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:33 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:33 +0000] "GET /api/rto/data/2025-10-07?t=1759822053496&r=co2dzc&nocache=1 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:33 +05:30: [Backend] RTO data found: false
+2025-10-07 12:57:33 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:33 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:37 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-06
+2025-10-07 12:57:37 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-06
+2025-10-07 12:57:37 +05:30: [Backend] getCourierCounts called with date: 2025-10-06
+2025-10-07 12:57:37 +05:30: [Backend] ⏱️ getScanResultsByDate completed in 89ms for 68 results
+2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/scans/2025-10-06 HTTP/1.1" 200 15672 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:37 +05:30: [Backend] RTO data found: true
+2025-10-07 12:57:37 +05:30: [Backend] Barcodes length: 68
+2025-10-07 12:57:37 +05:30: [Backend] Barcodes type: string
+2025-10-07 12:57:37 +05:30: Parsed barcodes type: array
+2025-10-07 12:57:37 +05:30: Has fulfilledBy data: true
+2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/courier-counts/2025-10-06 HTTP/1.1" 200 124 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:37 +05:30: [Backend] ⏱️ getRTODataByDate completed in 150ms for 68 barcodes
+2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/data/2025-10-06 HTTP/1.1" 200 22444 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"

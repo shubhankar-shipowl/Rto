@@ -1,0 +1,110 @@
+2025-10-07 12:27:03 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 12:27:03 +05:30: [34mStarting backend server...[0m
+2025-10-07 12:27:03 +05:30: [32mBackend started successfully![0m
+2025-10-07 12:27:04 +05:30: [Backend] Server is running on port 5003
+2025-10-07 12:27:04 +05:30: [Backend] MySQL database connected successfully
+2025-10-07 12:27:05 +05:30: [Backend] Database synchronized
+2025-10-07 12:27:06 +05:30: [34mStarting frontend server...[0m
+2025-10-07 12:27:06 +05:30: [32mFrontend started successfully![0m
+2025-10-07 12:27:07 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 12:27:07 +05:30: > vite preview
+2025-10-07 12:27:07 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 12:27:07 +05:30: [Frontend] ➜  Network: http://192.168.1.7:4173/
+2025-10-07 12:27:11 +05:30: [32m✅ Frontend is running[0m
+2025-10-07 12:27:12 +05:30: [32m✅ Backend is running[0m
+2025-10-07 12:27:12 +05:30: [Backend] ::1 - - [07/Oct/2025:06:57:12 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "-"
+2025-10-07 12:27:13 +05:30: [32m🎉 RTO Application started successfully![0m
+2025-10-07 12:27:13 +05:30: [34mBackend: http://localhost:5003[0m
+2025-10-07 12:27:13 +05:30: [34mFrontend: http://localhost:4173[0m
+2025-10-07 12:27:13 +05:30: [34mPress Ctrl+C to stop the application[0m
+2025-10-07 12:33:17 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:17 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "curl/8.7.1"
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:44 +05:30: [Backend] RTO data found: false
+2025-10-07 12:33:44 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] ⏱️ getScanResultsByDate completed in 59ms for 0 results
+2025-10-07 12:33:44 +05:30: ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:44 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:33:44 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:33:44 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:44 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:45 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:45 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:33:45 +05:30: [Backend] ::1 - - [07/Oct/2025:07:03:45 +0000] "GET /api/rto/summary HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:35:03 +05:30: [33m
+2025-10-07 12:35:03 +05:30: Shutting down...[0m
+2025-10-07 12:35:03 +05:30: [33mStopping processes...[0m
+2025-10-07 12:35:03 +05:30: [32mProcesses stopped![0m
+2025-10-07 12:38:37 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 12:38:37 +05:30: Backend process exited with code 1
+2025-10-07 12:38:37 +05:30: Restarting backend in 3 seconds...
+2025-10-07 12:38:38 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 12:38:38 +05:30: > vite preview
+2025-10-07 12:38:38 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 12:38:38 +05:30: [Frontend] ➜  Network: http://192.168.1.7:4173/
+2025-10-07 12:39:31 +05:30: Shutting down...
+2025-10-07 12:39:36 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 12:39:36 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 12:39:36 +05:30: > vite preview
+2025-10-07 12:39:36 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 12:39:36 +05:30: [Frontend] ➜  Network: http://192.168.1.7:4173/
+2025-10-07 12:39:36 +05:30: [Backend] Server is running on port 5003
+2025-10-07 12:39:37 +05:30: [Backend] MySQL database connected successfully
+2025-10-07 12:39:37 +05:30: [Backend] Database synchronized
+2025-10-07 12:39:51 +05:30: [Backend] ::1 - - [07/Oct/2025:07:09:51 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "curl/8.7.1"
+2025-10-07 12:57:03 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:03 +0000] "POST /api/auth/login HTTP/1.1" 200 120 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:03 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:03 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:03 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:57:03 +05:30: [Backend] ⏱️ getScanResultsByDate completed in 318ms for 0 results
+2025-10-07 12:57:03 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:03 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 200 2 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:03 +05:30: [Backend] RTO data found: false
+2025-10-07 12:57:03 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:03 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:21 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:21 +0000] "GET /api/rto/summary HTTP/1.1" 500 52 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:21 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:21 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 500 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:21 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:21 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:21 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:21 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:57:21 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:21 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:22 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:22 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:28 +05:30: ⏱️ getScanResultsByDate (cached) completed in 1ms for 0 results
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/scans/2025-10-07 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: RTO data found: false
+2025-10-07 12:57:28 +05:30: ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/data/2025-10-07 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:28 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:28 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:33 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-07
+2025-10-07 12:57:33 +05:30: [Backend] getCourierCounts called with date: 2025-10-07
+2025-10-07 12:57:33 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-07
+2025-10-07 12:57:33 +05:30: [Backend] 📊 Using cached scan results for date: 2025-10-07
+2025-10-07 12:57:33 +05:30: ⏱️ getScanResultsByDate (cached) completed in 0ms for 0 results
+2025-10-07 12:57:33 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:33 +0000] "GET /api/rto/scans/2025-10-07?t=1759822053496&r=co2dzc&nocache=1 HTTP/1.1" 200 2 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:33 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:33 +0000] "GET /api/rto/data/2025-10-07?t=1759822053496&r=co2dzc&nocache=1 HTTP/1.1" 404 39 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:33 +05:30: [Backend] RTO data found: false
+2025-10-07 12:57:33 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:33 +0000] "GET /api/rto/courier-counts/2025-10-07 HTTP/1.1" 404 41 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:37 +05:30: [Backend] 📊 getScanResultsByDate called for date: 2025-10-06
+2025-10-07 12:57:37 +05:30: [Backend] 📊 getRTODataByDate called for date: 2025-10-06
+2025-10-07 12:57:37 +05:30: [Backend] getCourierCounts called with date: 2025-10-06
+2025-10-07 12:57:37 +05:30: [Backend] ⏱️ getScanResultsByDate completed in 89ms for 68 results
+2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/scans/2025-10-06 HTTP/1.1" 200 15672 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:37 +05:30: [Backend] RTO data found: true
+2025-10-07 12:57:37 +05:30: [Backend] Barcodes length: 68
+2025-10-07 12:57:37 +05:30: [Backend] Barcodes type: string
+2025-10-07 12:57:37 +05:30: Parsed barcodes type: array
+2025-10-07 12:57:37 +05:30: Has fulfilledBy data: true
+2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/courier-counts/2025-10-06 HTTP/1.1" 200 124 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 12:57:37 +05:30: [Backend] ⏱️ getRTODataByDate completed in 150ms for 68 barcodes
+2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/data/2025-10-06 HTTP/1.1" 200 22444 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"

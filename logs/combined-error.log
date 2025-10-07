@@ -1,0 +1,295 @@
+2025-10-07 12:24:42 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:42 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:42 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:42 +05:30: GNU long options:
+2025-10-07 12:24:42 +05:30: 	--debug
+2025-10-07 12:24:42 +05:30: 	--debugger
+2025-10-07 12:24:42 +05:30: 	--dump-po-strings
+2025-10-07 12:24:42 +05:30: 	--dump-strings
+2025-10-07 12:24:42 +05:30: 	--help
+2025-10-07 12:24:42 +05:30: 	--init-file
+2025-10-07 12:24:42 +05:30: 	--login
+2025-10-07 12:24:46 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:46 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:46 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:46 +05:30: GNU long options:
+2025-10-07 12:24:46 +05:30: 	--debug
+2025-10-07 12:24:46 +05:30: 	--debugger
+2025-10-07 12:24:46 +05:30: 	--dump-po-strings
+2025-10-07 12:24:46 +05:30: 	--dump-strings
+2025-10-07 12:24:46 +05:30: 	--help
+2025-10-07 12:24:46 +05:30: 	--init-file
+2025-10-07 12:24:46 +05:30: 	--login
+2025-10-07 12:24:46 +05:30: 	--noediting
+2025-10-07 12:24:46 +05:30: 	--noprofile
+2025-10-07 12:24:46 +05:30: 	--norc
+2025-10-07 12:24:46 +05:30: 	--posix
+2025-10-07 12:24:46 +05:30: 	--protected
+2025-10-07 12:24:46 +05:30: 	--rcfile
+2025-10-07 12:24:46 +05:30: 	--restricted
+2025-10-07 12:24:46 +05:30: 	--verbose
+2025-10-07 12:24:46 +05:30: 	--version
+2025-10-07 12:24:46 +05:30: 	--wordexp
+2025-10-07 12:24:46 +05:30: Shell options:
+2025-10-07 12:24:46 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:24:46 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:24:50 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:50 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:50 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:50 +05:30: GNU long options:
+2025-10-07 12:24:50 +05:30: 	--debug
+2025-10-07 12:24:50 +05:30: 	--debugger
+2025-10-07 12:24:50 +05:30: 	--dump-po-strings
+2025-10-07 12:24:50 +05:30: 	--dump-strings
+2025-10-07 12:24:50 +05:30: 	--help
+2025-10-07 12:24:50 +05:30: 	--init-file
+2025-10-07 12:24:50 +05:30: 	--login
+2025-10-07 12:24:50 +05:30: 	--noediting
+2025-10-07 12:24:50 +05:30: 	--noprofile
+2025-10-07 12:24:50 +05:30: 	--norc
+2025-10-07 12:24:50 +05:30: 	--posix
+2025-10-07 12:24:50 +05:30: 	--protected
+2025-10-07 12:24:50 +05:30: 	--rcfile
+2025-10-07 12:24:50 +05:30: 	--restricted
+2025-10-07 12:24:50 +05:30: 	--verbose
+2025-10-07 12:24:50 +05:30: 	--version
+2025-10-07 12:24:50 +05:30: 	--wordexp
+2025-10-07 12:24:50 +05:30: Shell options:
+2025-10-07 12:24:50 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:24:50 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:24:54 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:54 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:54 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:54 +05:30: GNU long options:
+2025-10-07 12:24:54 +05:30: 	--debug
+2025-10-07 12:24:54 +05:30: 	--debugger
+2025-10-07 12:24:54 +05:30: 	--dump-po-strings
+2025-10-07 12:24:54 +05:30: 	--dump-strings
+2025-10-07 12:24:54 +05:30: 	--help
+2025-10-07 12:24:54 +05:30: 	--init-file
+2025-10-07 12:24:54 +05:30: 	--login
+2025-10-07 12:24:54 +05:30: 	--noediting
+2025-10-07 12:24:54 +05:30: 	--noprofile
+2025-10-07 12:24:54 +05:30: 	--norc
+2025-10-07 12:24:54 +05:30: 	--posix
+2025-10-07 12:24:54 +05:30: 	--protected
+2025-10-07 12:24:54 +05:30: 	--rcfile
+2025-10-07 12:24:54 +05:30: 	--restricted
+2025-10-07 12:24:54 +05:30: 	--verbose
+2025-10-07 12:24:54 +05:30: 	--version
+2025-10-07 12:24:54 +05:30: 	--wordexp
+2025-10-07 12:24:54 +05:30: Shell options:
+2025-10-07 12:24:58 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:24:58 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:24:58 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:24:58 +05:30: GNU long options:
+2025-10-07 12:24:58 +05:30: 	--debug
+2025-10-07 12:24:58 +05:30: 	--debugger
+2025-10-07 12:24:58 +05:30: 	--dump-po-strings
+2025-10-07 12:24:58 +05:30: 	--dump-strings
+2025-10-07 12:24:58 +05:30: 	--help
+2025-10-07 12:24:58 +05:30: 	--init-file
+2025-10-07 12:24:58 +05:30: 	--login
+2025-10-07 12:24:58 +05:30: 	--noediting
+2025-10-07 12:24:58 +05:30: 	--noprofile
+2025-10-07 12:24:58 +05:30: 	--norc
+2025-10-07 12:24:58 +05:30: 	--posix
+2025-10-07 12:24:58 +05:30: 	--protected
+2025-10-07 12:24:58 +05:30: 	--rcfile
+2025-10-07 12:24:58 +05:30: 	--restricted
+2025-10-07 12:24:58 +05:30: 	--verbose
+2025-10-07 12:24:58 +05:30: 	--version
+2025-10-07 12:25:02 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:02 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:02 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:02 +05:30: GNU long options:
+2025-10-07 12:25:02 +05:30: 	--debug
+2025-10-07 12:25:02 +05:30: 	--debugger
+2025-10-07 12:25:02 +05:30: 	--dump-po-strings
+2025-10-07 12:25:02 +05:30: 	--dump-strings
+2025-10-07 12:25:02 +05:30: 	--help
+2025-10-07 12:25:02 +05:30: 	--init-file
+2025-10-07 12:25:02 +05:30: 	--login
+2025-10-07 12:25:02 +05:30: 	--noediting
+2025-10-07 12:25:02 +05:30: 	--noprofile
+2025-10-07 12:25:02 +05:30: 	--norc
+2025-10-07 12:25:02 +05:30: 	--posix
+2025-10-07 12:25:02 +05:30: 	--protected
+2025-10-07 12:25:02 +05:30: 	--rcfile
+2025-10-07 12:25:02 +05:30: 	--restricted
+2025-10-07 12:25:02 +05:30: 	--verbose
+2025-10-07 12:25:02 +05:30: 	--version
+2025-10-07 12:25:02 +05:30: 	--wordexp
+2025-10-07 12:25:02 +05:30: Shell options:
+2025-10-07 12:25:02 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:25:02 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:25:06 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:06 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:06 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:06 +05:30: GNU long options:
+2025-10-07 12:25:06 +05:30: 	--debug
+2025-10-07 12:25:06 +05:30: 	--debugger
+2025-10-07 12:25:06 +05:30: 	--dump-po-strings
+2025-10-07 12:25:06 +05:30: 	--dump-strings
+2025-10-07 12:25:06 +05:30: 	--help
+2025-10-07 12:25:06 +05:30: 	--init-file
+2025-10-07 12:25:06 +05:30: 	--login
+2025-10-07 12:25:06 +05:30: 	--noediting
+2025-10-07 12:25:06 +05:30: 	--noprofile
+2025-10-07 12:25:06 +05:30: 	--norc
+2025-10-07 12:25:06 +05:30: 	--posix
+2025-10-07 12:25:06 +05:30: 	--protected
+2025-10-07 12:25:06 +05:30: 	--rcfile
+2025-10-07 12:25:06 +05:30: 	--restricted
+2025-10-07 12:25:10 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:10 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:10 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:10 +05:30: GNU long options:
+2025-10-07 12:25:10 +05:30: 	--debug
+2025-10-07 12:25:10 +05:30: 	--debugger
+2025-10-07 12:25:10 +05:30: 	--dump-po-strings
+2025-10-07 12:25:10 +05:30: 	--dump-strings
+2025-10-07 12:25:10 +05:30: 	--help
+2025-10-07 12:25:10 +05:30: 	--init-file
+2025-10-07 12:25:10 +05:30: 	--login
+2025-10-07 12:25:10 +05:30: 	--noediting
+2025-10-07 12:25:10 +05:30: 	--noprofile
+2025-10-07 12:25:10 +05:30: 	--norc
+2025-10-07 12:25:10 +05:30: 	--posix
+2025-10-07 12:25:10 +05:30: 	--protected
+2025-10-07 12:25:10 +05:30: 	--rcfile
+2025-10-07 12:25:10 +05:30: 	--restricted
+2025-10-07 12:25:14 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:14 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:14 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:14 +05:30: GNU long options:
+2025-10-07 12:25:14 +05:30: 	--debug
+2025-10-07 12:25:14 +05:30: 	--debugger
+2025-10-07 12:25:14 +05:30: 	--dump-po-strings
+2025-10-07 12:25:14 +05:30: 	--dump-strings
+2025-10-07 12:25:14 +05:30: 	--help
+2025-10-07 12:25:14 +05:30: 	--init-file
+2025-10-07 12:25:14 +05:30: 	--login
+2025-10-07 12:25:14 +05:30: 	--noediting
+2025-10-07 12:25:14 +05:30: 	--noprofile
+2025-10-07 12:25:14 +05:30: 	--norc
+2025-10-07 12:25:14 +05:30: 	--posix
+2025-10-07 12:25:14 +05:30: 	--protected
+2025-10-07 12:25:14 +05:30: 	--rcfile
+2025-10-07 12:25:14 +05:30: 	--restricted
+2025-10-07 12:25:14 +05:30: 	--verbose
+2025-10-07 12:25:14 +05:30: 	--version
+2025-10-07 12:25:14 +05:30: 	--wordexp
+2025-10-07 12:25:14 +05:30: Shell options:
+2025-10-07 12:25:14 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:25:18 +05:30: bash: --max-old-space-size=1024: invalid option
+2025-10-07 12:25:18 +05:30: Usage:	bash [GNU long option] [option] ...
+2025-10-07 12:25:18 +05:30: 	bash [GNU long option] [option] script-file ...
+2025-10-07 12:25:18 +05:30: GNU long options:
+2025-10-07 12:25:18 +05:30: 	--debug
+2025-10-07 12:25:18 +05:30: 	--debugger
+2025-10-07 12:25:18 +05:30: 	--dump-po-strings
+2025-10-07 12:25:18 +05:30: 	--dump-strings
+2025-10-07 12:25:18 +05:30: 	--help
+2025-10-07 12:25:18 +05:30: 	--init-file
+2025-10-07 12:25:18 +05:30: 	--login
+2025-10-07 12:25:18 +05:30: 	--noediting
+2025-10-07 12:25:18 +05:30: 	--noprofile
+2025-10-07 12:25:18 +05:30: 	--norc
+2025-10-07 12:25:18 +05:30: 	--posix
+2025-10-07 12:25:18 +05:30: 	--protected
+2025-10-07 12:25:18 +05:30: 	--rcfile
+2025-10-07 12:25:18 +05:30: 	--restricted
+2025-10-07 12:25:18 +05:30: 	--verbose
+2025-10-07 12:25:18 +05:30: 	--version
+2025-10-07 12:25:18 +05:30: 	--wordexp
+2025-10-07 12:25:18 +05:30: Shell options:
+2025-10-07 12:25:18 +05:30: 	-irsD or -c command or -O shopt_option		(invocation only)
+2025-10-07 12:25:18 +05:30: 	-abefhkmnptuvxBCHP or -o option
+2025-10-07 12:38:37 +05:30: [Backend Error] node:internal/modules/cjs/loader:1148
+2025-10-07 12:38:37 +05:30:   throw err;
+2025-10-07 12:38:37 +05:30:   ^
+2025-10-07 12:38:37 +05:30: 
+2025-10-07 12:38:37 +05:30: Error: Cannot find module '/Users/shubhankarhaldar/Desktop/rto/server/server/src/index.js'
+2025-10-07 12:38:37 +05:30:     at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+2025-10-07 12:38:37 +05:30:     at Module._load (node:internal/modules/cjs/loader:986:27)
+2025-10-07 12:38:37 +05:30:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)
+2025-10-07 12:38:37 +05:30:     at node:internal/main/run_main_module:28:49 {
+2025-10-07 12:38:37 +05:30:   code: 'MODULE_NOT_FOUND',
+2025-10-07 12:38:37 +05:30:   requireStack: []
+2025-10-07 12:38:37 +05:30: }
+2025-10-07 12:38:37 +05:30: 
+2025-10-07 12:38:37 +05:30: Node.js v20.16.0
+2025-10-07 12:38:40 +05:30: [Backend Error] node:internal/modules/cjs/loader:1148
+2025-10-07 12:38:40 +05:30:   throw err;
+2025-10-07 12:38:40 +05:30:   ^
+2025-10-07 12:38:40 +05:30: 
+2025-10-07 12:38:40 +05:30: Error: Cannot find module '/Users/shubhankarhaldar/Desktop/rto/server/server/src/index.js'
+2025-10-07 12:38:40 +05:30:     at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+2025-10-07 12:38:40 +05:30:     at Module._load (node:internal/modules/cjs/loader:986:27)
+2025-10-07 12:38:40 +05:30:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)
+2025-10-07 12:38:40 +05:30:     at node:internal/main/run_main_module:28:49 {
+2025-10-07 12:38:40 +05:30:   code: 'MODULE_NOT_FOUND',
+2025-10-07 12:38:40 +05:30:   requireStack: []
+2025-10-07 12:38:40 +05:30: }
+2025-10-07 12:38:40 +05:30: 
+2025-10-07 12:38:40 +05:30: Node.js v20.16.0
+2025-10-07 12:57:21 +05:30: [Backend Error] Error fetching overall upload summary: Error
+2025-10-07 12:57:21 +05:30:     at Query.run (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/mysql/query.js:52:25)
+2025-10-07 12:57:21 +05:30:     at /Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/sequelize.js:315:28
+2025-10-07 12:57:21 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 12:57:21 +05:30:     at async MySQLQueryInterface.select (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/abstract/query-interface.js:407:12)
+2025-10-07 12:57:21 +05:30:     at async RTOData.findAll (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/model.js:1140:21)
+2025-10-07 12:57:21 +05:30:     at async getOverallUploadSummary (/Users/shubhankarhaldar/Desktop/rto/server/controllers/rtoController.js:716:24) {
+2025-10-07 12:57:21 +05:30:   name: 'SequelizeDatabaseError',
+2025-10-07 12:57:21 +05:30:   parent: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: 'SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary`, `createdAt`, `updatedAt` FROM `rto_data` AS `RTOData`;',
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   original: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: 'SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary`, `createdAt`, `updatedAt` FROM `rto_data` AS `RTOData`;',
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   sql: 'SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary`, `createdAt`, `updatedAt` FROM `rto_data` AS `RTOData`;',
+2025-10-07 12:57:21 +05:30:   parameters: {}
+2025-10-07 12:57:21 +05:30: }
+2025-10-07 12:57:21 +05:30: [Backend Error] Get RTO data error: Error
+2025-10-07 12:57:21 +05:30:     at Query.run (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/mysql/query.js:52:25)
+2025-10-07 12:57:21 +05:30:     at /Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/sequelize.js:315:28
+2025-10-07 12:57:21 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 12:57:21 +05:30:     at async MySQLQueryInterface.select (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/dialects/abstract/query-interface.js:407:12)
+2025-10-07 12:57:21 +05:30:     at async RTOData.findAll (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/model.js:1140:21)
+2025-10-07 12:57:21 +05:30:     at async RTOData.findOne (/Users/shubhankarhaldar/Desktop/rto/node_modules/sequelize/lib/model.js:1240:12)
+2025-10-07 12:57:21 +05:30:     at async getRTODataByDate (/Users/shubhankarhaldar/Desktop/rto/server/controllers/rtoController.js:598:21) {
+2025-10-07 12:57:21 +05:30:   name: 'SequelizeDatabaseError',
+2025-10-07 12:57:21 +05:30:   parent: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: "SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary` FROM `rto_data` AS `RTOData` WHERE `RTOData`.`date` = '2025-10-07' LIMIT 1;",
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   original: Error: read EADDRNOTAVAIL
+2025-10-07 12:57:21 +05:30:       at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+2025-10-07 12:57:21 +05:30:     errno: -49,
+2025-10-07 12:57:21 +05:30:     code: 'EADDRNOTAVAIL',
+2025-10-07 12:57:21 +05:30:     syscall: 'read',
+2025-10-07 12:57:21 +05:30:     fatal: true,
+2025-10-07 12:57:21 +05:30:     sql: "SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary` FROM `rto_data` AS `RTOData` WHERE `RTOData`.`date` = '2025-10-07' LIMIT 1;",
+2025-10-07 12:57:21 +05:30:     parameters: undefined
+2025-10-07 12:57:21 +05:30:   },
+2025-10-07 12:57:21 +05:30:   sql: "SELECT `id`, `date`, `barcodes`, `uploadInfo`, `reconciliationSummary` FROM `rto_data` AS `RTOData` WHERE `RTOData`.`date` = '2025-10-07' LIMIT 1;",
+2025-10-07 12:57:21 +05:30:   parameters: {}
+2025-10-07 12:57:21 +05:30: }
