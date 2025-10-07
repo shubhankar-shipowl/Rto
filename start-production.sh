@@ -140,7 +140,7 @@ fi
 print_status "Installing frontend dependencies..."
 if [ -d "client" ] && [ -f "client/package.json" ]; then
     cd client
-    npm install
+    npm install --include=dev
     if [ $? -ne 0 ]; then
         print_error "Failed to install frontend dependencies"
         exit 1
@@ -160,8 +160,14 @@ fi
 print_step "Building frontend for production..."
 if [ -d "client" ]; then
     cd client
+    print_status "Checking if Vite is available..."
+    if ! npx vite --version >/dev/null 2>&1; then
+        print_error "Vite not available via npx. Please ensure frontend dependencies are properly installed."
+        exit 1
+    fi
+    print_status "Vite is available via npx"
     print_status "Building Vite application..."
-    npm run build
+    npx vite build
     if [ $? -ne 0 ]; then
         print_error "Frontend build failed"
         exit 1
