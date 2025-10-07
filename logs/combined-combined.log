@@ -403,3 +403,210 @@
 2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/courier-counts/2025-10-06 HTTP/1.1" 200 124 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
 2025-10-07 12:57:37 +05:30: [Backend] ⏱️ getRTODataByDate completed in 150ms for 68 barcodes
 2025-10-07 12:57:37 +05:30: [Backend] ::1 - - [07/Oct/2025:07:27:37 +0000] "GET /api/rto/data/2025-10-06 HTTP/1.1" 200 22444 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-10-07 13:37:11 +05:30: Shutting down...
+2025-10-07 13:47:17 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 13:47:17 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 13:47:17 +05:30: > vite preview
+2025-10-07 13:47:18 +05:30: [Backend] Server is running on port 5003
+2025-10-07 13:47:18 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 13:47:18 +05:30: [Frontend] ➜  Network: http://172.20.10.5:4173/
+2025-10-07 13:47:18 +05:30: [Backend Error] Database connection error: AccessDeniedError [SequelizeAccessDeniedError]: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:47:18 +05:30:     at ConnectionManager.connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/mysql/connection-manager.js:94:17)
+2025-10-07 13:47:18 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 13:47:18 +05:30:     at async ConnectionManager._connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:222:24)
+2025-10-07 13:47:18 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:174:32
+2025-10-07 13:47:18 +05:30:     at async ConnectionManager.getConnection (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:197:7)
+2025-10-07 13:47:18 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:305:26
+2025-10-07 13:47:18 +05:30:     at async Sequelize.authenticate (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:457:5)
+2025-10-07 13:47:18 +05:30:     at async connectDB (/Users/shubhankarhaldar/Desktop/Rto/server/src/database.js:48:5) {
+2025-10-07 13:47:18 +05:30:   parent: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:47:18 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:47:18 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:47:18 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:47:18 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:47:18 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:47:18 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:47:18 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:47:18 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:47:18 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:47:18 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:47:18 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:47:18 +05:30:     errno: 1045,
+2025-10-07 13:47:18 +05:30:     sqlState: '28000',
+2025-10-07 13:47:18 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:47:18 +05:30:     sql: undefined
+2025-10-07 13:47:18 +05:30:   },
+2025-10-07 13:47:18 +05:30:   original: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:47:18 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:47:18 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:47:18 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:47:18 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:47:18 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:47:18 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:47:18 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:47:18 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:47:18 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:47:18 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:47:18 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:47:18 +05:30:     errno: 1045,
+2025-10-07 13:47:18 +05:30:     sqlState: '28000',
+2025-10-07 13:47:18 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:47:18 +05:30:     sql: undefined
+2025-10-07 13:47:18 +05:30:   }
+2025-10-07 13:47:18 +05:30: }
+2025-10-07 13:47:18 +05:30: Backend process exited with code 1
+2025-10-07 13:47:18 +05:30: Restarting backend in 3 seconds...
+2025-10-07 13:47:21 +05:30: [Backend] Server is running on port 5003
+2025-10-07 13:47:21 +05:30: [Backend Error] Database connection error: AccessDeniedError [SequelizeAccessDeniedError]: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:47:21 +05:30:     at ConnectionManager.connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/mysql/connection-manager.js:94:17)
+2025-10-07 13:47:21 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 13:47:21 +05:30:     at async ConnectionManager._connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:222:24)
+2025-10-07 13:47:21 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:174:32
+2025-10-07 13:47:21 +05:30:     at async ConnectionManager.getConnection (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:197:7)
+2025-10-07 13:47:21 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:305:26
+2025-10-07 13:47:21 +05:30:     at async Sequelize.authenticate (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:457:5)
+2025-10-07 13:47:21 +05:30:     at async connectDB (/Users/shubhankarhaldar/Desktop/Rto/server/src/database.js:48:5) {
+2025-10-07 13:47:21 +05:30:   parent: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:47:21 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:47:21 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:47:21 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:47:21 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:47:21 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:47:21 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:47:21 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:47:21 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:47:21 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:47:21 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:47:21 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:47:21 +05:30:     errno: 1045,
+2025-10-07 13:47:21 +05:30:     sqlState: '28000',
+2025-10-07 13:47:21 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:47:21 +05:30:     sql: undefined
+2025-10-07 13:47:21 +05:30:   },
+2025-10-07 13:47:21 +05:30:   original: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:47:21 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:47:21 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:47:21 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:47:21 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:47:21 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:47:21 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:47:21 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:47:21 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:47:21 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:47:21 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:47:21 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:47:21 +05:30:     errno: 1045,
+2025-10-07 13:47:21 +05:30:     sqlState: '28000',
+2025-10-07 13:47:21 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:47:21 +05:30:     sql: undefined
+2025-10-07 13:47:21 +05:30:   }
+2025-10-07 13:47:21 +05:30: }
+2025-10-07 13:50:07 +05:30: Shutting down...
+2025-10-07 13:50:07 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 13:50:07 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 13:50:07 +05:30: > vite preview
+2025-10-07 13:50:08 +05:30: [Backend] Server is running on port 5003
+2025-10-07 13:50:08 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 13:50:08 +05:30: [Frontend] ➜  Network: http://172.20.10.5:4173/
+2025-10-07 13:50:08 +05:30: [Backend Error] Database connection error: AccessDeniedError [SequelizeAccessDeniedError]: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:50:08 +05:30:     at ConnectionManager.connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/mysql/connection-manager.js:94:17)
+2025-10-07 13:50:08 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 13:50:08 +05:30:     at async ConnectionManager._connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:222:24)
+2025-10-07 13:50:08 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:174:32
+2025-10-07 13:50:08 +05:30:     at async ConnectionManager.getConnection (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:197:7)
+2025-10-07 13:50:08 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:305:26
+2025-10-07 13:50:08 +05:30:     at async Sequelize.authenticate (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:457:5)
+2025-10-07 13:50:08 +05:30:     at async connectDB (/Users/shubhankarhaldar/Desktop/Rto/server/src/database.js:48:5) {
+2025-10-07 13:50:08 +05:30:   parent: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:50:08 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:50:08 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:50:08 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:50:08 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:50:08 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:50:08 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:50:08 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:50:08 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:50:08 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:50:08 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:50:08 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:50:08 +05:30:     errno: 1045,
+2025-10-07 13:50:08 +05:30:     sqlState: '28000',
+2025-10-07 13:50:08 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:50:08 +05:30:     sql: undefined
+2025-10-07 13:50:08 +05:30:   },
+2025-10-07 13:50:08 +05:30:   original: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:50:08 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:50:08 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:50:08 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:50:08 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:50:08 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:50:08 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:50:08 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:50:08 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:50:08 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:50:08 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:50:08 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:50:08 +05:30:     errno: 1045,
+2025-10-07 13:50:08 +05:30:     sqlState: '28000',
+2025-10-07 13:50:08 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:50:08 +05:30:     sql: undefined
+2025-10-07 13:50:08 +05:30:   }
+2025-10-07 13:50:08 +05:30: }
+2025-10-07 13:50:08 +05:30: Backend process exited with code 1
+2025-10-07 13:50:08 +05:30: Restarting backend in 3 seconds...
+2025-10-07 13:50:11 +05:30: [Backend] Server is running on port 5003
+2025-10-07 13:50:11 +05:30: [Backend Error] Database connection error: AccessDeniedError [SequelizeAccessDeniedError]: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:50:11 +05:30:     at ConnectionManager.connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/mysql/connection-manager.js:94:17)
+2025-10-07 13:50:11 +05:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-07 13:50:11 +05:30:     at async ConnectionManager._connect (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:222:24)
+2025-10-07 13:50:11 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:174:32
+2025-10-07 13:50:11 +05:30:     at async ConnectionManager.getConnection (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:197:7)
+2025-10-07 13:50:11 +05:30:     at async /Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:305:26
+2025-10-07 13:50:11 +05:30:     at async Sequelize.authenticate (/Users/shubhankarhaldar/Desktop/Rto/node_modules/sequelize/lib/sequelize.js:457:5)
+2025-10-07 13:50:11 +05:30:     at async connectDB (/Users/shubhankarhaldar/Desktop/Rto/server/src/database.js:48:5) {
+2025-10-07 13:50:11 +05:30:   parent: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:50:11 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:50:11 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:50:11 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:50:11 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:50:11 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:50:11 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:50:11 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:50:11 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:50:11 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:50:11 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:50:11 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:50:11 +05:30:     errno: 1045,
+2025-10-07 13:50:11 +05:30:     sqlState: '28000',
+2025-10-07 13:50:11 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:50:11 +05:30:     sql: undefined
+2025-10-07 13:50:11 +05:30:   },
+2025-10-07 13:50:11 +05:30:   original: Error: Access denied for user 'root'@'localhost' (using password: YES)
+2025-10-07 13:50:11 +05:30:       at Packet.asError (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packets/packet.js:740:17)
+2025-10-07 13:50:11 +05:30:       at ClientHandshake.execute (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/commands/command.js:29:26)
+2025-10-07 13:50:11 +05:30:       at Connection.handlePacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:475:34)
+2025-10-07 13:50:11 +05:30:       at PacketParser.onPacket (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:93:12)
+2025-10-07 13:50:11 +05:30:       at PacketParser.executeStart (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/packet_parser.js:75:16)
+2025-10-07 13:50:11 +05:30:       at Socket.<anonymous> (/Users/shubhankarhaldar/Desktop/Rto/node_modules/mysql2/lib/base/connection.js:100:25)
+2025-10-07 13:50:11 +05:30:       at Socket.emit (node:events:519:28)
+2025-10-07 13:50:11 +05:30:       at addChunk (node:internal/streams/readable:559:12)
+2025-10-07 13:50:11 +05:30:       at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+2025-10-07 13:50:11 +05:30:       at Readable.push (node:internal/streams/readable:390:5) {
+2025-10-07 13:50:11 +05:30:     code: 'ER_ACCESS_DENIED_ERROR',
+2025-10-07 13:50:11 +05:30:     errno: 1045,
+2025-10-07 13:50:11 +05:30:     sqlState: '28000',
+2025-10-07 13:50:11 +05:30:     sqlMessage: "Access denied for user 'root'@'localhost' (using password: YES)",
+2025-10-07 13:50:11 +05:30:     sql: undefined
+2025-10-07 13:50:11 +05:30:   }
+2025-10-07 13:50:11 +05:30: }
+2025-10-07 13:55:59 +05:30: Shutting down...
+2025-10-07 13:56:18 +05:30: 🚀 Starting RTO Application (Combined Mode)...
+2025-10-07 13:56:18 +05:30: [Frontend] > vite_react_shadcn_ts@0.0.0 preview
+2025-10-07 13:56:18 +05:30: > vite preview
+2025-10-07 13:56:19 +05:30: [Frontend] ➜  Local:   http://localhost:4173/
+2025-10-07 13:56:19 +05:30:   ➜  Network: http://172.20.10.5:4173/
+2025-10-07 13:56:19 +05:30: [Backend] Server is running on port 5003
+2025-10-07 13:56:19 +05:30: [Backend] MySQL database connected successfully
+2025-10-07 13:56:21 +05:30: [Backend] Database synchronized
+2025-10-07 13:56:52 +05:30: [Backend] ::1 - - [07/Oct/2025:08:26:52 +0000] "GET /api/rto/summary HTTP/1.1" 200 62 "-" "curl/8.7.1"
+2025-10-07 14:00:16 +05:30: Shutting down...

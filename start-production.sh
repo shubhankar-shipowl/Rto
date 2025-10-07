@@ -97,16 +97,22 @@ print_success "All required tools are available!"
 
 # Create necessary directories
 print_step "Creating necessary directories..."
-mkdir -p logs
+mkdir -p logs temp server/print-jobs
 mkdir -p server/uploads
 mkdir -p client/dist
 
 # Set proper permissions
 chmod 755 logs
+chmod 755 temp
+chmod 755 server/print-jobs
 chmod 755 server/uploads
 chmod 755 client/dist
 
 print_success "Directories created and permissions set!"
+
+# Set NODE_ENV explicitly for production
+export NODE_ENV=production
+print_status "Environment set: NODE_ENV=production"
 
 # Install dependencies
 print_step "Installing dependencies..."
@@ -145,27 +151,41 @@ fi
 print_success "All dependencies installed successfully!"
 
 # Build frontend
-print_step "Building frontend for production..."
+print_step "Ensuring client directory structure exists..."
+if [ ! -f "client/package.json" ]; then
+    print_error "client/package.json not found. Please ensure the client directory is properly uploaded."
+    exit 1
+fi
 
+print_step "Building frontend for production..."
 if [ -d "client" ]; then
     cd client
-    print_status "Building React application..."
+    print_status "Building Vite application..."
     npm run build
     if [ $? -ne 0 ]; then
         print_error "Frontend build failed"
         exit 1
     fi
     cd ..
-    print_success "Frontend built successfully!"
+    if [ ! -d "client/dist" ]; then
+        print_error "Build directory client/dist not found after build process"
+        exit 1
+    fi
+    if [ ! -f "client/dist/index.html" ]; then
+        print_error "Build index.html not found at client/dist/index.html"
+        exit 1
+    fi
+    print_success "Frontend built and verified successfully!"
 else
     print_warning "Client directory not found, skipping frontend build"
 fi
 
 # Stop any existing processes
-print_step "Stopping existing processes..."
+print_step "Cleaning previous PM2 processes..."
+pm2 delete rto-application 2>/dev/null || echo "No previous rto-application process to clean"
 pm2 stop ecosystem.config.js 2>/dev/null || true
 pm2 delete ecosystem.config.js 2>/dev/null || true
-print_success "Existing processes stopped!"
+print_success "PM2 processes cleaned"
 
 # Start the application with PM2
 print_step "Starting RTO Application with PM2..."
@@ -220,7 +240,7 @@ print_success "🚀 Application URLs:"
 echo -e "  ${GREEN}Frontend:${NC} http://localhost:4173"
 echo -e "  ${GREEN}Backend API:${NC} http://localhost:5003"
 echo -e "  ${GREEN}API Summary:${NC} http://localhost:5003/api/rto/summary"
-echo -e "  ${GREEN}Combined Process:${NC} Single PM2 process manages both frontend and backend"
+echo -e "  ${GREEN}PM2 Process:${NC} Single combined process (rto-application)"
 echo ""
 
 print_status "📊 Quick Health Check:"
@@ -242,15 +262,15 @@ echo ""
 print_status "🔧 Useful Commands:"
 echo "  pm2 status          - Check application status"
 echo "  pm2 logs            - View logs"
-echo "  pm2 logs rto-application - View combined application logs"
-echo "  pm2 restart rto-application - Restart the application"
-echo "  pm2 stop rto-application - Stop the application"
-echo "  pm2 monit           - Monitor application in real-time"
+echo "  pm2 logs rto-application - View combined logs"
+echo "  pm2 restart all     - Restart all applications"
+echo "  pm2 stop all        - Stop all applications"
+echo "  pm2 monit           - Monitor applications in real-time"
 echo ""
 
 print_status "📁 Log Files:"
-echo "  Combined logs: ./logs/combined-*.log"
-echo "  PM2 logs: pm2 logs"
+echo "  Combined logs: pm2 logs rto-application"
+echo "  All logs: pm2 logs"
 echo ""
 
 print_success "🎯 Your RTO Application is now running in production mode!"
