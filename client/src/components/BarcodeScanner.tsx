@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { format } from "date-fns";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { format } from 'date-fns';
 import {
   Calendar as CalendarIcon,
   Scan,
@@ -7,27 +7,27 @@ import {
   XCircle,
   AlertCircle,
   Keyboard,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BarcodeResult {
   barcode: string;
@@ -77,7 +77,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = (props) => {
   try {
     return <BarcodeScannerMain {...props} />;
   } catch (error) {
-    console.error("BarcodeScanner error:", error);
+    console.error('BarcodeScanner error:', error);
     return <BarcodeScannerFallback />;
   }
 };
@@ -85,15 +85,15 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = (props) => {
 const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
   onScanResult,
 }) => {
-  console.log("BarcodeScanner component rendering");
+  console.log('BarcodeScanner component rendering');
 
   // Always start with current date, completely ignore prop on initial render
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const currentDate = new Date();
-    console.log("Scanner initializing with current date:", currentDate);
+    console.log('Scanner initializing with current date:', currentDate);
     return currentDate;
   });
-  const [barcode, setBarcode] = useState("");
+  const [barcode, setBarcode] = useState('');
   const [scanResults, setScanResults] = useState<BarcodeResult[]>([]);
   const [scanSummary, setScanSummary] = useState<ScanSummary>({
     totalScanned: 0,
@@ -115,8 +115,8 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
 
   // Load scan data for selected date
   const loadScanData = useCallback(async (date: Date) => {
-    console.log("🚀 loadScanData called with date:", date);
-    console.log("🚀 Date object details:", {
+    console.log('🚀 loadScanData called with date:', date);
+    console.log('🚀 Date object details:', {
       year: date.getFullYear(),
       month: date.getMonth() + 1,
       date: date.getDate(),
@@ -125,12 +125,12 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
     });
 
     if (loadingRef.current) {
-      console.log("⏳ Already loading, skipping...");
+      console.log('⏳ Already loading, skipping...');
       return;
     }
 
     if (!date) {
-      console.log("❌ No date provided, skipping load");
+      console.log('❌ No date provided, skipping load');
       return;
     }
 
@@ -141,19 +141,19 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
     try {
       // Use local date formatting to avoid timezone issues
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
 
-      console.log("📅 Original date:", date);
-      console.log("📅 Formatted date string:", dateString);
-      console.log("📅 ISO string:", date.toISOString());
-      console.log("📅 Local date string:", date.toLocaleDateString());
-      console.log("📅 Last loaded date:", lastLoadedDate);
+      console.log('📅 Original date:', date);
+      console.log('📅 Formatted date string:', dateString);
+      console.log('📅 ISO string:', date.toISOString());
+      console.log('📅 Local date string:', date.toLocaleDateString());
+      console.log('📅 Last loaded date:', lastLoadedDate);
 
       // Check if we're loading the same date again
       if (lastLoadedDate === dateString) {
-        console.log("⚠️ Same date already loaded, skipping...");
+        console.log('⚠️ Same date already loaded, skipping...');
         return;
       }
 
@@ -161,7 +161,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
 
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timeout")), 10000)
+        setTimeout(() => reject(new Error('Request timeout')), 10000),
       );
 
       // Fetch both RTO data and scan results with aggressive cache busting
@@ -172,34 +172,34 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           fetch(
             `http://localhost:5003/api/rto/data/${dateString}?t=${timestamp}&r=${randomId}&nocache=1`,
             {
-              method: "GET",
+              method: 'GET',
               headers: {
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                Pragma: "no-cache",
-                Expires: "0",
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                Pragma: 'no-cache',
+                Expires: '0',
               },
-            }
+            },
           ),
           fetch(
             `http://localhost:5003/api/rto/scans/${dateString}?t=${timestamp}&r=${randomId}&nocache=1`,
             {
-              method: "GET",
+              method: 'GET',
               headers: {
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                Pragma: "no-cache",
-                Expires: "0",
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                Pragma: 'no-cache',
+                Expires: '0',
               },
-            }
+            },
           ),
         ]),
         timeoutPromise,
       ])) as [Response, Response];
 
-      console.log("🌐 RTO response status:", rtoResponse.status);
-      console.log("🌐 Scan response status:", scanResponse.status);
+      console.log('🌐 RTO response status:', rtoResponse.status);
+      console.log('🌐 Scan response status:', scanResponse.status);
       console.log(
-        "🌐 Requested URL:",
-        `http://localhost:5003/api/rto/data/${dateString}?t=${timestamp}`
+        '🌐 Requested URL:',
+        `http://localhost:5003/api/rto/data/${dateString}?t=${timestamp}`,
       );
 
       let totalAvailable = 0;
@@ -210,8 +210,8 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       // Get total available items from RTO data
       if (rtoResponse.ok) {
         const rtoData = await rtoResponse.json();
-        console.log("🔍 RTO Data received:", rtoData);
-        console.log("📊 Total products in response:", rtoData.barcodes?.length);
+        console.log('🔍 RTO Data received:', rtoData);
+        console.log('📊 Total products in response:', rtoData.barcodes?.length);
 
         if (rtoData.barcodes && Array.isArray(rtoData.barcodes)) {
           // Count unique waybills instead of total products
@@ -226,17 +226,17 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           });
 
           totalAvailable = uniqueWaybills.size;
-          console.log("📋 All barcodes:", allBarcodes);
-          console.log("🔢 Unique waybills:", Array.from(uniqueWaybills));
-          console.log("✅ Final count:", totalAvailable);
+          console.log('📋 All barcodes:', allBarcodes);
+          console.log('🔢 Unique waybills:', Array.from(uniqueWaybills));
+          console.log('✅ Final count:', totalAvailable);
         } else {
           totalAvailable = 0;
         }
         console.log(
-          `🎯 RESULT for ${dateString}: ${totalAvailable} unique waybills from ${rtoData.barcodes?.length} products`
+          `🎯 RESULT for ${dateString}: ${totalAvailable} unique waybills from ${rtoData.barcodes?.length} products`,
         );
       } else {
-        console.log("❌ RTO data not found for date:", dateString);
+        console.log('❌ RTO data not found for date:', dateString);
         totalAvailable = 0;
       }
 
@@ -245,9 +245,9 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
         scanResults = await scanResponse.json();
         matchedCount = scanResults.filter((item: any) => item.match).length;
         unmatchedCount = scanResults.length - matchedCount;
-        console.log("Scan results for", dateString, ":", scanResults.length);
+        console.log('Scan results for', dateString, ':', scanResults.length);
       } else {
-        console.log("No scan results for date:", dateString);
+        console.log('No scan results for date:', dateString);
         scanResults = [];
       }
 
@@ -261,10 +261,10 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       setScanSummary(summary);
       setScanResults(scanResults);
       setForceUpdate((prev) => prev + 1); // Force re-render
-      console.log("Loaded data for", dateString, ":", summary);
+      console.log('Loaded data for', dateString, ':', summary);
     } catch (error) {
-      console.error("Error loading scan data:", error);
-      setError("Failed to load scan data. Please try again.");
+      console.error('Error loading scan data:', error);
+      setError('Failed to load scan data. Please try again.');
       setScanResults([]);
       setScanSummary({
         totalScanned: 0,
@@ -280,10 +280,10 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
 
   // Load courier counts for selected date
   const loadCourierCounts = useCallback(async (date: Date) => {
-    console.log("🔄 loadCourierCounts called with date:", date);
+    console.log('🔄 loadCourierCounts called with date:', date);
 
     if (!date || isNaN(date.getTime())) {
-      console.error("❌ Invalid date provided to loadCourierCounts:", date);
+      console.error('❌ Invalid date provided to loadCourierCounts:', date);
       setCourierCounts([]);
       return;
     }
@@ -291,44 +291,44 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
     try {
       // Use local date formatting to avoid timezone issues
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
 
-      console.log("📅 Loading courier counts for scanner date:", dateString);
+      console.log('📅 Loading courier counts for scanner date:', dateString);
 
       const response = await fetch(
-        `http://localhost:5003/api/rto/courier-counts/${dateString}`
+        `http://localhost:5003/api/rto/courier-counts/${dateString}`,
       );
 
-      console.log("🌐 Courier counts API response status:", response.status);
+      console.log('🌐 Courier counts API response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Scanner courier counts loaded:", data);
+        console.log('✅ Scanner courier counts loaded:', data);
         setCourierCounts(data.courierCounts || []);
       } else {
-        console.log("⚠️ No courier counts found for date:", dateString);
+        console.log('⚠️ No courier counts found for date:', dateString);
         setCourierCounts([]);
       }
     } catch (error) {
-      console.error("❌ Error loading scanner courier counts:", error);
+      console.error('❌ Error loading scanner courier counts:', error);
       setCourierCounts([]);
     }
   }, []);
 
   // Load data when selectedDate changes
   useEffect(() => {
-    console.log("🔄 useEffect triggered - selectedDate:", selectedDate);
+    console.log('🔄 useEffect triggered - selectedDate:', selectedDate);
     if (selectedDate) {
-      console.log("📅 Selected date changed, loading data for:", selectedDate);
+      console.log('📅 Selected date changed, loading data for:', selectedDate);
       console.log(
-        "📅 Date string will be:",
-        selectedDate.toISOString().split("T")[0]
+        '📅 Date string will be:',
+        selectedDate.toISOString().split('T')[0],
       );
 
       // Reset state before loading new data
-      console.log("🔄 Resetting state before loading new data");
+      console.log('🔄 Resetting state before loading new data');
       setScanSummary({
         totalScanned: 0,
         matched: 0,
@@ -345,7 +345,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
 
   // Debug: Track scanSummary changes
   useEffect(() => {
-    console.log("📊 scanSummary updated:", scanSummary);
+    console.log('📊 scanSummary updated:', scanSummary);
   }, [scanSummary]);
 
   // Scanner is now completely independent - no prop synchronization
@@ -380,7 +380,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
 
     // Check if already scanned locally (optimization)
     const alreadyScanned = scanResults.some(
-      (result) => result.barcode === trimmedBarcode
+      (result) => result.barcode === trimmedBarcode,
     );
     if (alreadyScanned) {
       setError(`Barcode ${trimmedBarcode} has already been scanned`);
@@ -393,21 +393,21 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
     try {
       // Use cached date string to avoid recalculation
       const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-      const day = String(selectedDate.getDate()).padStart(2, "0");
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
 
-      console.log("🔍 Scanning barcode:", trimmedBarcode);
-      console.log("🔍 Using date string:", dateString);
+      console.log('🔍 Scanning barcode:', trimmedBarcode);
+      console.log('🔍 Using date string:', dateString);
 
       // Add timeout for better UX
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-      const response = await fetch("http://localhost:5003/api/rto/scan", {
-        method: "POST",
+      const response = await fetch('http://localhost:5003/api/rto/scan', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ barcode: trimmedBarcode, date: dateString }),
         signal: controller.signal,
@@ -416,8 +416,8 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       clearTimeout(timeoutId);
 
       const data = await response.json();
-      console.log("🔍 Scan response:", data);
-      console.log("🔍 Response status:", response.status);
+      console.log('🔍 Scan response:', data);
+      console.log('🔍 Response status:', response.status);
 
       if (!response.ok) {
         if (data.alreadyScanned) {
@@ -425,23 +425,23 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
             barcode: barcode.trim(),
             match: false,
             timestamp: new Date(),
-            productName: data.previousScan?.productName || "N/A",
+            productName: data.previousScan?.productName || 'N/A',
             message: `Already scanned on ${new Date(
-              data.previousScan?.timestamp
+              data.previousScan?.timestamp,
             ).toLocaleDateString()}`,
             alreadyScanned: true,
             previousScan: {
-              timestamp: data.previousScan?.timestamp || "N/A",
-              status: data.previousScan?.status || "N/A",
+              timestamp: data.previousScan?.timestamp || 'N/A',
+              status: data.previousScan?.status || 'N/A',
             },
           };
           setScanResults((prev) => [duplicateResult, ...prev]);
           onScanResult(duplicateResult);
           setError(
-            `Barcode "${barcode.trim()}" already scanned for ${dateString}.`
+            `Barcode "${barcode.trim()}" already scanned for ${dateString}.`,
           );
         } else {
-          throw new Error(data.error || "Failed to scan barcode");
+          throw new Error(data.error || 'Failed to scan barcode');
         }
       } else {
         const newResult: BarcodeResult = {
@@ -451,7 +451,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           productName: data.productName,
           quantity: data.quantity,
           price: data.price,
-          message: data.match ? "Matched successfully" : "No match found",
+          message: data.match ? 'Matched successfully' : 'No match found',
         };
         setScanResults((prev) => [newResult, ...prev]);
         onScanResult(newResult);
@@ -471,20 +471,20 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
         }, 100);
       }
     } catch (err) {
-      console.error("Scan error:", err);
+      console.error('Scan error:', err);
 
-      if (err.name === "AbortError") {
-        setError("Scan request timed out. Please try again.");
+      if (err.name === 'AbortError') {
+        setError('Scan request timed out. Please try again.');
       } else {
         setError(
           `Error scanning barcode: ${
             err instanceof Error ? err.message : String(err)
-          }`
+          }`,
         );
       }
     } finally {
       setIsLoading(false);
-      setBarcode("");
+      setBarcode('');
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -506,12 +506,12 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
 
       setScanDebounceTimer(timer);
     },
-    [scanDebounceTimer, handleManualScan]
+    [scanDebounceTimer, handleManualScan],
   );
 
   // Handle key press for manual mode
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && barcode.trim()) {
+    if (e.key === 'Enter' && barcode.trim()) {
       e.preventDefault();
       debouncedScan(barcode);
     }
@@ -520,7 +520,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
   const displayDate = selectedDate || new Date();
   const hasData = scanSummary.totalAvailable > 0 || scanResults.length > 0;
 
-  console.log("BarcodeScanner render state:", {
+  console.log('BarcodeScanner render state:', {
     isLoading,
     error,
     selectedDate: displayDate,
@@ -528,6 +528,24 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
     hasData,
     scanResultsLength: scanResults.length,
   });
+
+  // Clear error and input, reload data, and refocus input
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setBarcode('');
+    setScanResults([]);
+    setScanSummary({
+      totalScanned: 0,
+      matched: 0,
+      unmatched: 0,
+      totalAvailable: 0,
+    });
+    loadScanData(selectedDate);
+    // Refocus after UI re-renders
+    setTimeout(() => {
+      if (inputRef.current) inputRef.current.focus();
+    }, 0);
+  }, [selectedDate, loadScanData]);
 
   // Show loading state
   if (isLoading && !error) {
@@ -555,7 +573,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
             </div>
             <p className="text-gray-600 mb-4">{error}</p>
             <Button
-              onClick={() => loadScanData(selectedDate)}
+              onClick={handleRetry}
               className="bg-gray-900 hover:bg-gray-800 text-white"
             >
               Retry
@@ -596,12 +614,12 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-12 border-2 border-gray-200 hover:border-gray-400 rounded-lg transition-all duration-200",
-                    !selectedDate && "text-gray-500"
+                    'w-full justify-start text-left font-normal h-12 border-2 border-gray-200 hover:border-gray-400 rounded-lg transition-all duration-200',
+                    !selectedDate && 'text-gray-500',
                   )}
                 >
                   <CalendarIcon className="mr-3 h-5 w-5 text-gray-600" />
-                  {displayDate ? format(displayDate, "PPP") : "Pick a date"}
+                  {displayDate ? format(displayDate, 'PPP') : 'Pick a date'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 rounded-lg shadow-xl border-0">
@@ -609,12 +627,12 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                   mode="single"
                   selected={displayDate}
                   onSelect={(date) => {
-                    console.log("🗓️ Date selected in picker:", date);
+                    console.log('🗓️ Date selected in picker:', date);
                     if (date) {
-                      console.log("🗓️ Setting selected date to:", date);
+                      console.log('🗓️ Setting selected date to:', date);
                       console.log(
-                        "🗓️ Date string will be:",
-                        date.toISOString().split("T")[0]
+                        '🗓️ Date string will be:',
+                        date.toISOString().split('T')[0],
                       );
                       setSelectedDate(date);
                       setIsDatePickerOpen(false);
@@ -697,7 +715,8 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                       <div className="text-sm text-purple-500 bg-purple-50 px-2 py-1 rounded-lg text-center">
                         {scanSummary.totalAvailable > 0
                           ? Math.round(
-                              (courier.count / scanSummary.totalAvailable) * 100
+                              (courier.count / scanSummary.totalAvailable) *
+                                100,
                             )
                           : 0}
                         %
@@ -732,15 +751,15 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           <div className="flex gap-3">
             <Button
               onClick={() => setIsManualMode(!isManualMode)}
-              variant={isManualMode ? "default" : "outline"}
+              variant={isManualMode ? 'default' : 'outline'}
               className={
                 isManualMode
-                  ? "h-10 px-4 rounded-lg transition-all duration-200 bg-gray-900 text-white"
-                  : "h-10 px-4 rounded-lg transition-all duration-200 border border-gray-300 hover:border-gray-400"
+                  ? 'h-10 px-4 rounded-lg transition-all duration-200 bg-gray-900 text-white'
+                  : 'h-10 px-4 rounded-lg transition-all duration-200 border border-gray-300 hover:border-gray-400'
               }
             >
               <Keyboard className="mr-2 h-5 w-5" />
-              {isManualMode ? "Scanner Mode" : "Manual Input"}
+              {isManualMode ? 'Scanner Mode' : 'Manual Input'}
             </Button>
           </div>
 
@@ -752,15 +771,15 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
               scanner to this computer. The input field below is automatically
               focused and ready for scanning.
               {isManualMode
-                ? " Switch to Scanner Mode for physical scanner use."
-                : " Use Manual Input mode to type barcodes manually."}
+                ? ' Switch to Scanner Mode for physical scanner use.'
+                : ' Use Manual Input mode to type barcodes manually.'}
             </AlertDescription>
           </Alert>
 
           {/* Scanner Input */}
           <div className="space-y-2">
             <Label htmlFor="barcode-input" className="text-gray-700">
-              {isManualMode ? "Manual Input" : "Scanner Input"}
+              {isManualMode ? 'Manual Input' : 'Scanner Input'}
             </Label>
             <div className="flex gap-2">
               <Input
@@ -771,15 +790,15 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                 onKeyDown={handleKeyPress}
                 placeholder={
                   isManualMode
-                    ? "Type barcode manually..."
-                    : "Scan barcode with physical scanner..."
+                    ? 'Type barcode manually...'
+                    : 'Scan barcode with physical scanner...'
                 }
                 className="flex-1 text-lg font-mono border border-gray-300 focus:border-gray-500 rounded-lg"
                 autoFocus
               />
               <Button
                 onClick={handleManualScan}
-                disabled={isLoading || barcode.trim() === ""}
+                disabled={isLoading || barcode.trim() === ''}
                 className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
@@ -810,16 +829,16 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           <CardContent className="p-6">
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {scanResults.map((result, index) => {
-                const isDuplicate = result.message?.includes("Already scanned");
+                const isDuplicate = result.message?.includes('Already scanned');
                 return (
                   <div
                     key={index}
                     className={`flex items-center justify-between p-4 rounded-lg hover:shadow-md transition-all duration-200 ${
                       isDuplicate
-                        ? "bg-yellow-50 border border-yellow-200"
+                        ? 'bg-yellow-50 border border-yellow-200'
                         : result.match
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-red-50 border border-red-200"
+                        ? 'bg-green-50 border border-green-200'
+                        : 'bg-red-50 border border-red-200'
                     }`}
                   >
                     <div className="flex-1">
@@ -839,12 +858,12 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                         <p className="text-sm text-gray-600 font-medium">
                           {result.productName}
                           {result.quantity && ` (Qty: ${result.quantity})`}
-                          {result.price && ` - $${result.price}`}
+                          {result.price && ` - ₹${result.price}`}
                         </p>
                       )}
                       <p
                         className={`text-xs mt-1 ${
-                          isDuplicate ? "text-yellow-600" : "text-gray-500"
+                          isDuplicate ? 'text-yellow-600' : 'text-gray-500'
                         }`}
                       >
                         {result.message}
@@ -856,24 +875,24 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                     <Badge
                       variant={
                         isDuplicate
-                          ? "secondary"
+                          ? 'secondary'
                           : result.match
-                          ? "default"
-                          : "destructive"
+                          ? 'default'
+                          : 'destructive'
                       }
                       className={
                         isDuplicate
-                          ? "px-3 py-1 rounded-lg font-semibold bg-yellow-100 text-yellow-800 border-yellow-200"
+                          ? 'px-3 py-1 rounded-lg font-semibold bg-yellow-100 text-yellow-800 border-yellow-200'
                           : result.match
-                          ? "px-3 py-1 rounded-lg font-semibold bg-green-100 text-green-800 border-green-200"
-                          : "px-3 py-1 rounded-lg font-semibold bg-red-100 text-red-800 border-red-200"
+                          ? 'px-3 py-1 rounded-lg font-semibold bg-green-100 text-green-800 border-green-200'
+                          : 'px-3 py-1 rounded-lg font-semibold bg-red-100 text-red-800 border-red-200'
                       }
                     >
                       {isDuplicate
-                        ? "Duplicate"
+                        ? 'Duplicate'
                         : result.match
-                        ? "Matched"
-                        : "Unmatched"}
+                        ? 'Matched'
+                        : 'Unmatched'}
                     </Badge>
                   </div>
                 );

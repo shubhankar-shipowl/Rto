@@ -1,9 +1,9 @@
-const XLSX = require("xlsx");
-const RTOData = require("../models/RTOData");
-const ScanResult = require("../models/ScanResult");
-const path = require("path");
-const { Op } = require("sequelize");
-const { sequelize } = require("../src/database");
+const XLSX = require('xlsx');
+const RTOData = require('../models/RTOData');
+const ScanResult = require('../models/ScanResult');
+const path = require('path');
+const { Op } = require('sequelize');
+const { sequelize } = require('../src/database');
 
 // Simple in-memory cache for reports data
 const reportsCache = new Map();
@@ -21,12 +21,12 @@ const clearCacheForDate = (date) => {
 const uploadRTOData = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+      return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const { date } = req.body;
     if (!date) {
-      return res.status(400).json({ error: "Date is required" });
+      return res.status(400).json({ error: 'Date is required' });
     }
 
     // Parse Excel file
@@ -39,19 +39,121 @@ const uploadRTOData = async (req, res) => {
     const productsByDate = {};
     const waybillCountsByDate = {}; // Track unique waybills per date
 
-    jsonData.forEach((row, index) => {
-      // Extract data from Excel columns
-      const waybillNumber = row["WayBill Number"]?.toString();
-      const productName = row["Product Name"]?.toString() || "";
-      const quantity = parseInt(row["Product Qty"]) || 1;
-      const price = parseFloat(row["Product Value"]) || 0;
-      const rtsDate = row["RTS Date"];
-      const fulfilledBy = row["Fulfilled By"]?.toString() || "Unknown";
+    // Helpers to robustly read values from various possible headers
+    const getFirst = (obj, keys) => {
+      for (const key of keys) {
+        if (
+          obj.hasOwnProperty(key) &&
+          obj[key] !== undefined &&
+          obj[key] !== null &&
+          obj[key] !== ''
+        ) {
+          return obj[key];
+        }
+      }
+      return undefined;
+    };
+
+    const toDateOnly = (value) => {
+      if (!value) return 'no-date';
+      if (value instanceof Date) {
+        const y = value.getFullYear();
+        const m = String(value.getMonth() + 1).padStart(2, '0');
+        const d = String(value.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      const str = String(value);
+      // Handles formats like "2025-10-01 14:15:55" or Excel strings
+      return str.includes(' ') ? str.split(' ')[0] : str.substring(0, 10);
+    };
+
+    const toInt = (value, fallback = 1) => {
+      if (value === undefined || value === null || value === '')
+        return fallback;
+      const n = parseInt(String(value).replace(/[^0-9-]/g, ''), 10);
+      return Number.isFinite(n) ? n : fallback;
+    };
+
+    const toPrice = (value, fallback = 0) => {
+      if (value === undefined || value === null || value === '')
+        return fallback;
+      const n = parseFloat(String(value).replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(n) ? n : fallback;
+    };
+
+    jsonData.forEach((row) => {
+      // Waybill / Barcode
+      const waybillNumber = (
+        getFirst(row, [
+          'WayBill Number',
+          'Waybill Number',
+          'Waybill',
+          'AWB',
+          'Tracking ID',
+          'Tracking Number',
+          'Waybill No',
+        ]) || ''
+      )
+        .toString()
+        .trim();
+
+      // Product name across possible headers
+      const rawProductName = getFirst(row, [
+        'Product Name',
+        'Product',
+        'Item Name',
+        'Item',
+        'Description',
+        'SKU Name',
+      ]);
+      const productName =
+        rawProductName !== undefined && rawProductName !== null
+          ? String(rawProductName).toString().trim()
+          : '';
+
+      // Quantity across possible headers
+      const quantity = toInt(
+        getFirst(row, ['Product Qty', 'Qty', 'Quantity', 'QTY']),
+        1,
+      );
+
+      // Price across possible headers; strip currency symbols and commas
+      const price = toPrice(
+        getFirst(row, [
+          'Product Value',
+          'Price',
+          'Selling Price',
+          'Amount',
+          'Item Price',
+          'MRP',
+        ]),
+        0,
+      );
+
+      // RTS/Return date
+      const rtsDateValue = getFirst(row, [
+        'RTS Date',
+        'Return Date',
+        'RTD',
+        'Date',
+      ]);
+      const rtsDate = rtsDateValue ? String(rtsDateValue) : undefined;
+
+      // Courier / Fulfilled By
+      const fulfilledBy = (
+        getFirst(row, [
+          'Fulfilled By',
+          'Courier',
+          'Courier Name',
+          'CourierName',
+          'Shipped By',
+        ]) || 'Unknown Courier'
+      ).toString();
 
       // Include all records that have a waybill number, regardless of RTS date
       if (waybillNumber) {
         // Use RTS date if available, otherwise use a default date
-        const dateOnly = rtsDate ? rtsDate.split(" ")[0] : "no-date";
+        const dateOnly = toDateOnly(rtsDate);
 
         if (!productsByDate[dateOnly]) {
           productsByDate[dateOnly] = [];
@@ -64,14 +166,14 @@ const uploadRTOData = async (req, res) => {
           productName,
           quantity,
           price,
-          status: "pending",
-          orderId: row["OrderId"],
-          orderDate: row["Order Date"],
-          rtsDate: rtsDate || "No RTS Date",
-          consigneeName: row["Consignee Name"],
-          city: row["City"],
-          state: row["State"],
-          pincode: row["Pincode"],
+          status: 'pending',
+          orderId: row['OrderId'],
+          orderDate: row['Order Date'],
+          rtsDate: rtsDate || 'No RTS Date',
+          consigneeName: row['Consignee Name'],
+          city: row['City'],
+          state: row['State'],
+          pincode: row['Pincode'],
           fulfilledBy: fulfilledBy,
         });
 
@@ -84,15 +186,15 @@ const uploadRTOData = async (req, res) => {
     console.log(
       `Records with waybill numbers: ${Object.values(productsByDate).reduce(
         (sum, products) => sum + products.length,
-        0
-      )}`
+        0,
+      )}`,
     );
     console.log(
-      "Products grouped by RTS Date:",
+      'Products grouped by RTS Date:',
       Object.keys(productsByDate).map(
         (date) =>
-          `${date}: ${productsByDate[date].length} products, ${waybillCountsByDate[date].size} unique waybills`
-      )
+          `${date}: ${productsByDate[date].length} products, ${waybillCountsByDate[date].size} unique waybills`,
+      ),
     );
 
     // Store products for each RTS date separately
@@ -101,7 +203,7 @@ const uploadRTOData = async (req, res) => {
     try {
       for (const [rtsDate, products] of Object.entries(productsByDate)) {
         console.log(
-          `Storing ${products.length} products for RTS date: ${rtsDate}`
+          `Storing ${products.length} products for RTS date: ${rtsDate}`,
         );
 
         // Check if data already exists for this RTS date
@@ -140,22 +242,22 @@ const uploadRTOData = async (req, res) => {
         });
       }
     } catch (dbError) {
-      console.error("Database error:", dbError);
+      console.error('Database error:', dbError);
       throw dbError;
     }
 
     const totalProducts = Object.values(productsByDate).reduce(
       (sum, products) => sum + products.length,
-      0
+      0,
     );
 
     const totalWaybills = Object.values(waybillCountsByDate).reduce(
       (sum, waybills) => sum + waybills.size,
-      0
+      0,
     );
 
     res.json({
-      message: "RTO data uploaded successfully",
+      message: 'RTO data uploaded successfully',
       uploadDate: date,
       totalRecords: totalWaybills, // Use unique waybill count
       totalProducts: totalProducts, // Keep product count for reference
@@ -172,8 +274,8 @@ const uploadRTOData = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ error: "Failed to process Excel file" });
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Failed to process Excel file' });
   }
 };
 
@@ -196,7 +298,7 @@ const scanBarcode = async (req, res) => {
     const { barcode, date } = req.body;
 
     if (!barcode || !date) {
-      return res.status(400).json({ error: "Barcode and date are required" });
+      return res.status(400).json({ error: 'Barcode and date are required' });
     }
 
     // Check cache first for better performance
@@ -207,13 +309,13 @@ const scanBarcode = async (req, res) => {
       // Find RTO data for the specified date with optimized query
       rtoData = await RTOData.findOne({
         where: { date: date },
-        attributes: ["id", "date", "barcodes", "reconciliationSummary"],
+        attributes: ['id', 'date', 'barcodes', 'reconciliationSummary'],
       });
 
       if (!rtoData) {
         return res
           .status(404)
-          .json({ error: "No RTO data found for this date" });
+          .json({ error: 'No RTO data found for this date' });
       }
 
       // Cache the data
@@ -230,39 +332,39 @@ const scanBarcode = async (req, res) => {
         barcodes: cachedData.barcodes,
         reconciliationSummary: cachedData.reconciliationSummary,
       };
-      console.log("Using cached data, rtoData.id:", rtoData.id);
+      console.log('Using cached data, rtoData.id:', rtoData.id);
     }
 
     // Ensure we have a valid id
     if (!rtoData.id) {
-      console.error("Missing rtoData.id, fetching fresh data from database");
+      console.error('Missing rtoData.id, fetching fresh data from database');
       rtoData = await RTOData.findOne({
         where: { date: date },
-        attributes: ["id", "date", "barcodes", "reconciliationSummary"],
+        attributes: ['id', 'date', 'barcodes', 'reconciliationSummary'],
       });
 
       if (!rtoData) {
         return res
           .status(404)
-          .json({ error: "No RTO data found for this date" });
+          .json({ error: 'No RTO data found for this date' });
       }
     }
 
     // Check if barcode exists in the data
     // Parse barcodes if it's a JSON string
     let barcodes = rtoData.barcodes || [];
-    if (typeof barcodes === "string") {
+    if (typeof barcodes === 'string') {
       try {
         barcodes = JSON.parse(barcodes);
       } catch (error) {
-        console.error("Error parsing barcodes:", error);
+        console.error('Error parsing barcodes:', error);
         barcodes = [];
       }
     }
 
     // Ensure barcodes is an array
     if (!Array.isArray(barcodes)) {
-      console.error("Barcodes is not an array:", typeof barcodes, barcodes);
+      console.error('Barcodes is not an array:', typeof barcodes, barcodes);
       barcodes = [];
     }
 
@@ -273,18 +375,18 @@ const scanBarcode = async (req, res) => {
         barcode: barcode,
       },
       attributes: [
-        "match",
-        "productName",
-        "quantity",
-        "price",
-        "message",
-        "timestamp",
+        'match',
+        'productName',
+        'quantity',
+        'price',
+        'message',
+        'timestamp',
       ],
     });
 
     if (existingScan) {
       return res.status(400).json({
-        error: "This barcode has already been scanned for this date",
+        error: 'This barcode has already been scanned for this date',
         alreadyScanned: true,
         previousScan: {
           match: existingScan.match,
@@ -312,7 +414,7 @@ const scanBarcode = async (req, res) => {
       const isFromDifferentDate = itemDate && itemDate !== date;
 
       // Update status to matched
-      barcodes[matchedBarcodeIndex].status = "matched";
+      barcodes[matchedBarcodeIndex].status = 'matched';
       barcodes[matchedBarcodeIndex].scannedAt = new Date();
       barcodes[matchedBarcodeIndex].isFromDifferentDate = isFromDifferentDate;
       barcodes[matchedBarcodeIndex].originalDate = itemDate;
@@ -325,11 +427,11 @@ const scanBarcode = async (req, res) => {
       };
 
       // Parse summary if it's a JSON string
-      if (typeof summary === "string") {
+      if (typeof summary === 'string') {
         try {
           summary = JSON.parse(summary);
         } catch (error) {
-          console.error("Error parsing reconciliationSummary:", error);
+          console.error('Error parsing reconciliationSummary:', error);
           summary = { totalScanned: 0, matched: 0, unmatched: 0 };
         }
       }
@@ -350,7 +452,7 @@ const scanBarcode = async (req, res) => {
             {
               where: { id: rtoData.id },
               transaction,
-            }
+            },
           ),
           ScanResult.create(
             {
@@ -362,12 +464,12 @@ const scanBarcode = async (req, res) => {
               price: barcodes[matchedBarcodeIndex].price,
               message: isFromDifferentDate
                 ? `Barcode matched in RTO data (from ${itemDate})`
-                : "Barcode matched in RTO data",
+                : 'Barcode matched in RTO data',
               timestamp: new Date(),
               isFromDifferentDate: isFromDifferentDate,
               originalDate: itemDate,
             },
-            { transaction }
+            { transaction },
           ),
         ]);
 
@@ -392,7 +494,7 @@ const scanBarcode = async (req, res) => {
           price: barcodes[matchedBarcodeIndex].price,
           message: isFromDifferentDate
             ? `Barcode matched in RTO data (from ${itemDate})`
-            : "Barcode matched in RTO data",
+            : 'Barcode matched in RTO data',
           timestamp: new Date(),
           isFromDifferentDate: isFromDifferentDate,
           originalDate: itemDate,
@@ -410,11 +512,11 @@ const scanBarcode = async (req, res) => {
       };
 
       // Parse summary if it's a JSON string
-      if (typeof summary === "string") {
+      if (typeof summary === 'string') {
         try {
           summary = JSON.parse(summary);
         } catch (error) {
-          console.error("Error parsing reconciliationSummary:", error);
+          console.error('Error parsing reconciliationSummary:', error);
           summary = { totalScanned: 0, matched: 0, unmatched: 0 };
         }
       }
@@ -434,20 +536,20 @@ const scanBarcode = async (req, res) => {
             {
               where: { id: rtoData.id },
               transaction,
-            }
+            },
           ),
           ScanResult.create(
             {
               barcode: barcode,
               date: date,
               match: false,
-              productName: "Unknown Product",
+              productName: 'Unknown Product',
               quantity: 1,
               price: 0,
-              message: "Barcode not found in RTO data",
+              message: 'Barcode not found in RTO data',
               timestamp: new Date(),
             },
-            { transaction }
+            { transaction },
           ),
         ]);
 
@@ -466,10 +568,10 @@ const scanBarcode = async (req, res) => {
         res.json({
           match: false,
           barcode: barcode,
-          productName: "Unknown Product",
+          productName: 'Unknown Product',
           quantity: 1,
           price: 0,
-          message: "Barcode not found in RTO data",
+          message: 'Barcode not found in RTO data',
           timestamp: new Date(),
         });
       } catch (error) {
@@ -478,14 +580,14 @@ const scanBarcode = async (req, res) => {
       }
     }
   } catch (error) {
-    console.error("Scan error details:", {
+    console.error('Scan error details:', {
       message: error.message,
       stack: error.stack,
       barcode: req.body?.barcode,
       date: req.body?.date,
     });
     res.status(500).json({
-      error: "Failed to process barcode scan",
+      error: 'Failed to process barcode scan',
       details: error.message,
     });
   }
@@ -499,7 +601,7 @@ const getRTOReport = async (req, res) => {
     const rtoData = await RTOData.findOne({ where: { date: date } });
 
     if (!rtoData) {
-      return res.status(404).json({ error: "No RTO data found for this date" });
+      return res.status(404).json({ error: 'No RTO data found for this date' });
     }
 
     const barcodes = rtoData.barcodes || [];
@@ -508,12 +610,12 @@ const getRTOReport = async (req, res) => {
       uploadInfo: rtoData.uploadInfo,
       reconciliationSummary: rtoData.reconciliationSummary,
       barcodes: barcodes,
-      matchedBarcodes: barcodes.filter((b) => b.status === "matched"),
-      unmatchedBarcodes: barcodes.filter((b) => b.status === "unmatched"),
+      matchedBarcodes: barcodes.filter((b) => b.status === 'matched'),
+      unmatchedBarcodes: barcodes.filter((b) => b.status === 'unmatched'),
     });
   } catch (error) {
-    console.error("Report error:", error);
-    res.status(500).json({ error: "Failed to fetch RTO report" });
+    console.error('Report error:', error);
+    res.status(500).json({ error: 'Failed to fetch RTO report' });
   }
 };
 
@@ -525,12 +627,12 @@ const getCalendarData = async (req, res) => {
     const startDate = new Date(
       year || new Date().getFullYear(),
       month ? month - 1 : new Date().getMonth(),
-      1
+      1,
     );
     const endDate = new Date(
       year || new Date().getFullYear(),
       month ? month : new Date().getMonth() + 1,
-      0
+      0,
     );
 
     // Add error handling for database connection
@@ -541,10 +643,10 @@ const getCalendarData = async (req, res) => {
           [Op.lte]: endDate,
         },
       },
-      attributes: ["id", "date", "reconciliationSummary", "uploadInfo"],
-      order: [["date", "ASC"]],
+      attributes: ['id', 'date', 'reconciliationSummary', 'uploadInfo'],
+      order: [['date', 'ASC']],
     }).catch((dbError) => {
-      console.error("Database query error:", dbError);
+      console.error('Database query error:', dbError);
       return []; // Return empty array if database query fails
     });
 
@@ -552,19 +654,19 @@ const getCalendarData = async (req, res) => {
     const parsedCalendarData = (calendarData || []).map((item) => ({
       ...item.toJSON(),
       uploadInfo:
-        typeof item.uploadInfo === "string"
+        typeof item.uploadInfo === 'string'
           ? JSON.parse(item.uploadInfo)
           : item.uploadInfo,
       reconciliationSummary:
-        typeof item.reconciliationSummary === "string"
+        typeof item.reconciliationSummary === 'string'
           ? JSON.parse(item.reconciliationSummary)
           : item.reconciliationSummary,
     }));
 
     res.json(parsedCalendarData);
   } catch (error) {
-    console.error("Calendar error:", error);
-    res.status(500).json({ error: "Failed to fetch calendar data" });
+    console.error('Calendar error:', error);
+    res.status(500).json({ error: 'Failed to fetch calendar data' });
   }
 };
 
@@ -575,7 +677,7 @@ const getRTODataByDate = async (req, res) => {
     const { date } = req.params;
 
     if (!date) {
-      return res.status(400).json({ error: "Date is required" });
+      return res.status(400).json({ error: 'Date is required' });
     }
 
     console.log(`📊 getRTODataByDate called for date: ${date}`);
@@ -590,7 +692,7 @@ const getRTODataByDate = async (req, res) => {
       console.log(
         `⏱️ getRTODataByDate (cached) completed in ${
           endTime - startTime
-        }ms for ${cachedData.data.barcodes?.length || 0} barcodes`
+        }ms for ${cachedData.data.barcodes?.length || 0} barcodes`,
       );
       return res.json(cachedData.data);
     }
@@ -598,31 +700,31 @@ const getRTODataByDate = async (req, res) => {
     const rtoData = await RTOData.findOne({
       where: { date: date },
       attributes: [
-        "id",
-        "date",
-        "barcodes",
-        "uploadInfo",
-        "reconciliationSummary",
+        'id',
+        'date',
+        'barcodes',
+        'uploadInfo',
+        'reconciliationSummary',
       ],
     });
 
     if (!rtoData) {
-      return res.status(404).json({ error: "No data found for this date" });
+      return res.status(404).json({ error: 'No data found for this date' });
     }
 
     // Parse JSON fields before sending
     const parsedData = {
       ...rtoData.toJSON(),
       uploadInfo:
-        typeof rtoData.uploadInfo === "string"
+        typeof rtoData.uploadInfo === 'string'
           ? JSON.parse(rtoData.uploadInfo)
           : rtoData.uploadInfo,
       reconciliationSummary:
-        typeof rtoData.reconciliationSummary === "string"
+        typeof rtoData.reconciliationSummary === 'string'
           ? JSON.parse(rtoData.reconciliationSummary)
           : rtoData.reconciliationSummary,
       barcodes:
-        typeof rtoData.barcodes === "string"
+        typeof rtoData.barcodes === 'string'
           ? JSON.parse(rtoData.barcodes)
           : rtoData.barcodes,
     };
@@ -637,12 +739,12 @@ const getRTODataByDate = async (req, res) => {
     console.log(
       `⏱️ getRTODataByDate completed in ${endTime - startTime}ms for ${
         parsedData.barcodes?.length || 0
-      } barcodes`
+      } barcodes`,
     );
     res.json(parsedData);
   } catch (error) {
-    console.error("Get RTO data error:", error);
-    res.status(500).json({ error: "Failed to retrieve RTO data" });
+    console.error('Get RTO data error:', error);
+    res.status(500).json({ error: 'Failed to retrieve RTO data' });
   }
 };
 
@@ -653,7 +755,7 @@ const getScanResultsByDate = async (req, res) => {
     const { date } = req.params;
 
     if (!date) {
-      return res.status(400).json({ error: "Date is required" });
+      return res.status(400).json({ error: 'Date is required' });
     }
 
     console.log(`📊 getScanResultsByDate called for date: ${date}`);
@@ -668,24 +770,24 @@ const getScanResultsByDate = async (req, res) => {
       console.log(
         `⏱️ getScanResultsByDate (cached) completed in ${
           endTime - startTime
-        }ms for ${cachedData.data.length} results`
+        }ms for ${cachedData.data.length} results`,
       );
       return res.json(cachedData.data);
     }
 
     const scanResults = await ScanResult.findAll({
       where: { date: date },
-      order: [["timestamp", "DESC"]],
+      order: [['timestamp', 'DESC']],
       attributes: [
-        "id",
-        "barcode",
-        "date",
-        "match",
-        "productName",
-        "quantity",
-        "price",
-        "timestamp",
-        "message",
+        'id',
+        'barcode',
+        'date',
+        'match',
+        'productName',
+        'quantity',
+        'price',
+        'timestamp',
+        'message',
       ],
       limit: 1000, // Limit to prevent huge responses
     });
@@ -700,12 +802,12 @@ const getScanResultsByDate = async (req, res) => {
     console.log(
       `⏱️ getScanResultsByDate completed in ${endTime - startTime}ms for ${
         scanResults.length
-      } results`
+      } results`,
     );
     res.json(scanResults);
   } catch (error) {
-    console.error("Get scan results error:", error);
-    res.status(500).json({ error: "Failed to retrieve scan results" });
+    console.error('Get scan results error:', error);
+    res.status(500).json({ error: 'Failed to retrieve scan results' });
   }
 };
 
@@ -719,7 +821,7 @@ const getOverallUploadSummary = async (req, res) => {
     let totalRecords = 0;
     allRTOData.forEach((data) => {
       const uploadInfo =
-        typeof data.uploadInfo === "string"
+        typeof data.uploadInfo === 'string'
           ? JSON.parse(data.uploadInfo)
           : data.uploadInfo;
       totalRecords += uploadInfo.totalRecords || 0;
@@ -745,8 +847,8 @@ const getOverallUploadSummary = async (req, res) => {
       unmatched,
     });
   } catch (error) {
-    console.error("Error fetching overall upload summary:", error);
-    res.status(500).json({ message: "Failed to fetch overall upload summary" });
+    console.error('Error fetching overall upload summary:', error);
+    res.status(500).json({ message: 'Failed to fetch overall upload summary' });
   }
 };
 
@@ -754,14 +856,14 @@ const getOverallUploadSummary = async (req, res) => {
 const getAllUploadedData = async (req, res) => {
   try {
     const uploadedData = await RTOData.findAll({
-      attributes: ["id", "date", "uploadInfo", "createdAt"],
-      order: [["createdAt", "DESC"]],
+      attributes: ['id', 'date', 'uploadInfo', 'createdAt'],
+      order: [['createdAt', 'DESC']],
     });
 
     res.status(200).json(uploadedData);
   } catch (error) {
-    console.error("Error fetching all uploaded data:", error);
-    res.status(500).json({ message: "Failed to fetch uploaded data" });
+    console.error('Error fetching all uploaded data:', error);
+    res.status(500).json({ message: 'Failed to fetch uploaded data' });
   }
 };
 
@@ -786,8 +888,8 @@ const deleteUploadedData = async (req, res) => {
       deletedScanResults,
     });
   } catch (error) {
-    console.error("Error deleting uploaded data:", error);
-    res.status(500).json({ message: "Failed to delete uploaded data" });
+    console.error('Error deleting uploaded data:', error);
+    res.status(500).json({ message: 'Failed to delete uploaded data' });
   }
 };
 
@@ -807,20 +909,20 @@ const deleteAllUploadedData = async (req, res) => {
     });
 
     res.status(200).json({
-      message: "Successfully deleted all uploaded data",
+      message: 'Successfully deleted all uploaded data',
       deletedRTOData,
       deletedScanResults,
     });
   } catch (error) {
-    console.error("Error deleting all uploaded data:", error);
-    res.status(500).json({ message: "Failed to delete all uploaded data" });
+    console.error('Error deleting all uploaded data:', error);
+    res.status(500).json({ message: 'Failed to delete all uploaded data' });
   }
 };
 
 // Get courier-wise counts for a specific date
 const getCourierCounts = async (req, res) => {
   try {
-    console.log("getCourierCounts called with date:", req.params.date);
+    console.log('getCourierCounts called with date:', req.params.date);
     const { date } = req.params;
 
     // Get RTO data for the specific date
@@ -828,10 +930,10 @@ const getCourierCounts = async (req, res) => {
       where: { date: date },
     });
 
-    console.log("RTO data found:", !!rtoData);
+    console.log('RTO data found:', !!rtoData);
 
     if (!rtoData) {
-      return res.status(404).json({ message: "No data found for this date" });
+      return res.status(404).json({ message: 'No data found for this date' });
     }
 
     // Count items by courier
@@ -841,26 +943,26 @@ const getCourierCounts = async (req, res) => {
     // Handle both array and JSON string formats
     if (Array.isArray(rtoData.barcodes)) {
       barcodes = rtoData.barcodes;
-    } else if (typeof rtoData.barcodes === "string") {
+    } else if (typeof rtoData.barcodes === 'string') {
       try {
         barcodes = JSON.parse(rtoData.barcodes);
       } catch (error) {
-        console.error("Error parsing barcodes JSON:", error);
+        console.error('Error parsing barcodes JSON:', error);
         barcodes = [];
       }
     }
 
-    console.log("Barcodes length:", barcodes.length);
-    console.log("Barcodes type:", typeof rtoData.barcodes);
+    console.log('Barcodes length:', barcodes.length);
+    console.log('Barcodes type:', typeof rtoData.barcodes);
     console.log(
-      "Parsed barcodes type:",
-      Array.isArray(barcodes) ? "array" : typeof barcodes
+      'Parsed barcodes type:',
+      Array.isArray(barcodes) ? 'array' : typeof barcodes,
     );
 
     // Check if any items have fulfilledBy field
     const hasFulfilledByData = barcodes.some((item) => item.fulfilledBy);
 
-    console.log("Has fulfilledBy data:", hasFulfilledByData);
+    console.log('Has fulfilledBy data:', hasFulfilledByData);
 
     if (!hasFulfilledByData) {
       return res.status(200).json({
@@ -873,7 +975,7 @@ const getCourierCounts = async (req, res) => {
     }
 
     barcodes.forEach((item) => {
-      const courier = item.fulfilledBy || "Unknown";
+      const courier = item.fulfilledBy || 'Unknown';
       courierCounts[courier] = (courierCounts[courier] || 0) + 1;
     });
 
@@ -891,9 +993,9 @@ const getCourierCounts = async (req, res) => {
       courierCounts: courierData,
     });
   } catch (error) {
-    console.error("Error fetching courier counts:", error);
+    console.error('Error fetching courier counts:', error);
     res.status(500).json({
-      message: "Failed to fetch courier counts",
+      message: 'Failed to fetch courier counts',
       error: error.message,
     });
   }
@@ -905,7 +1007,7 @@ const deleteUnmatchedScan = async (req, res) => {
     const { barcode, date } = req.body;
 
     if (!barcode || !date) {
-      return res.status(400).json({ error: "Barcode and date are required" });
+      return res.status(400).json({ error: 'Barcode and date are required' });
     }
 
     // Delete the scan result
@@ -919,7 +1021,7 @@ const deleteUnmatchedScan = async (req, res) => {
 
     if (deletedCount === 0) {
       return res.status(404).json({
-        message: "No unmatched scan result found with this barcode",
+        message: 'No unmatched scan result found with this barcode',
       });
     }
 
@@ -936,11 +1038,11 @@ const deleteUnmatchedScan = async (req, res) => {
       };
 
       // Parse summary if it's a JSON string
-      if (typeof summary === "string") {
+      if (typeof summary === 'string') {
         try {
           summary = JSON.parse(summary);
         } catch (error) {
-          console.error("Error parsing reconciliationSummary:", error);
+          console.error('Error parsing reconciliationSummary:', error);
           summary = { totalScanned: 0, matched: 0, unmatched: 0 };
         }
       }
@@ -956,7 +1058,7 @@ const deleteUnmatchedScan = async (req, res) => {
         },
         {
           where: { id: rtoData.id },
-        }
+        },
       );
     }
 
@@ -964,13 +1066,13 @@ const deleteUnmatchedScan = async (req, res) => {
     clearCacheForDate(date);
 
     res.status(200).json({
-      message: "Unmatched scan result deleted successfully",
+      message: 'Unmatched scan result deleted successfully',
       deletedCount,
     });
   } catch (error) {
-    console.error("Error deleting unmatched scan:", error);
+    console.error('Error deleting unmatched scan:', error);
     res.status(500).json({
-      message: "Failed to delete unmatched scan result",
+      message: 'Failed to delete unmatched scan result',
       error: error.message,
     });
   }

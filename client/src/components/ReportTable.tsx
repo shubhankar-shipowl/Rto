@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -6,17 +6,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
+} from './ui/table';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Download, FileText, Trash2 } from "lucide-react";
-import { Button } from "./ui/button";
+} from './ui/card';
+import { Badge } from './ui/badge';
+import { Download, FileText, Trash2 } from 'lucide-react';
+import { Button } from './ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "./ui/alert-dialog";
+} from './ui/alert-dialog';
 
 interface BarcodeResult {
   barcode: string;
@@ -64,8 +64,8 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
   }) => {
     console.time(
       `ReportTable_render_${
-        selectedDate?.toISOString().split("T")[0] || "no-date"
-      }`
+        selectedDate?.toISOString().split('T')[0] || 'no-date'
+      }`,
     );
 
     // Safety checks for data
@@ -77,8 +77,8 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
       useMemo(() => {
         console.time(
           `ReportTable_data_processing_${
-            selectedDate?.toISOString().split("T")[0] || "no-date"
-          }`
+            selectedDate?.toISOString().split('T')[0] || 'no-date'
+          }`,
         );
 
         // Create a map of RTO data by barcode for quick lookup
@@ -97,10 +97,10 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
             productName:
               rtoItem?.productName ||
               scanResult.productName ||
-              "Unknown Product",
+              'Unknown Product',
             quantity: rtoItem?.quantity || scanResult.quantity || 1,
             price: rtoItem?.price || scanResult.price || 0,
-            fulfilledBy: rtoItem?.fulfilledBy || "Unknown Courier",
+            fulfilledBy: rtoItem?.fulfilledBy || 'Unknown Courier',
           };
         });
 
@@ -109,8 +109,8 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
 
         console.timeEnd(
           `ReportTable_data_processing_${
-            selectedDate?.toISOString().split("T")[0] || "no-date"
-          }`
+            selectedDate?.toISOString().split('T')[0] || 'no-date'
+          }`,
         );
         return {
           rtoDataMap: map,
@@ -122,15 +122,15 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
 
     const exportToCSV = () => {
       try {
-        console.log("📊 CSV Export Debug Info:");
-        console.log("📊 Enriched data length:", enrichedData.length);
-        console.log("📊 Unscanned products length:", unscannedProducts.length);
-        console.log("📊 Sample enriched item:", enrichedData[0]);
-        console.log("📊 Sample unscanned item:", unscannedProducts[0]);
+        console.log('📊 CSV Export Debug Info:');
+        console.log('📊 Enriched data length:', enrichedData.length);
+        console.log('📊 Unscanned products length:', unscannedProducts.length);
+        console.log('📊 Sample enriched item:', enrichedData[0]);
+        console.log('📊 Sample unscanned item:', unscannedProducts[0]);
 
         // Debug data structure issues
         if (enrichedData.length > 0) {
-          console.log("📊 Enriched data structure check:");
+          console.log('📊 Enriched data structure check:');
           enrichedData.forEach((item, index) => {
             if (!item.fulfilledBy) {
               console.warn(`⚠️ Item ${index} missing fulfilledBy:`, item);
@@ -139,12 +139,12 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
         }
 
         if (unscannedProducts.length > 0) {
-          console.log("📊 Unscanned products structure check:");
+          console.log('📊 Unscanned products structure check:');
           unscannedProducts.forEach((item, index) => {
             if (!item.fulfilledBy) {
               console.warn(
                 `⚠️ Unscanned item ${index} missing fulfilledBy:`,
-                item
+                item,
               );
             }
           });
@@ -153,23 +153,23 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
         // Prepare scanned data (matched and unmatched) using enriched data
         const scannedData = enrichedData.map((item) => {
           // Ensure all fields are properly formatted and aligned
-          const barcode = item.barcode || "";
-          const status = item.match ? "Matched" : "Unmatched";
-          const productName = (item.productName || "").replace(/,/g, ";"); // Replace commas to prevent CSV issues
+          const barcode = item.barcode || '';
+          const status = item.match ? 'Matched' : 'Unmatched';
+          const productName = (item.productName || '').replace(/,/g, ';'); // Replace commas to prevent CSV issues
           const quantity = (item.quantity || 1).toString();
           const price = (item.price || 0).toString();
           const timestamp = item.timestamp
             ? item.timestamp instanceof Date
               ? item.timestamp.toLocaleString()
               : new Date(item.timestamp).toLocaleString()
-            : "";
-          const courierName = (item.fulfilledBy || "Unknown Courier").replace(
+            : '';
+          const courierName = (item.fulfilledBy || 'Unknown Courier').replace(
             /,/g,
-            ";"
+            ';',
           ); // Replace commas to prevent CSV issues
           const remarks = item.isFromDifferentDate
             ? `From ${item.originalDate}`
-            : "";
+            : '';
 
           return [
             courierName,
@@ -186,20 +186,20 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
         // Prepare unscanned data
         const unscannedData = unscannedProducts.map((item) => {
           // Ensure all fields are properly formatted and aligned
-          const barcode = item.barcode || "";
-          const status = "Unscanned";
-          const productName = (item.productName || "Unknown Product").replace(
+          const barcode = item.barcode || '';
+          const status = 'Unscanned';
+          const productName = (item.productName || 'Unknown Product').replace(
             /,/g,
-            ";"
+            ';',
           ); // Replace commas to prevent CSV issues
           const quantity = (item.quantity || 1).toString();
           const price = (item.price || 0).toString();
-          const timestamp = ""; // No timestamp for unscanned items
-          const courierName = (item.fulfilledBy || "Unknown Courier").replace(
+          const timestamp = ''; // No timestamp for unscanned items
+          const courierName = (item.fulfilledBy || 'Unknown Courier').replace(
             /,/g,
-            ";"
+            ';',
           ); // Replace commas to prevent CSV issues
-          const remarks = ""; // No remarks for unscanned items
+          const remarks = ''; // No remarks for unscanned items
 
           return [
             courierName,
@@ -215,28 +215,28 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
 
         // Validate that all rows have the same number of columns
         const headerRow = [
-          "Courier Name",
-          "Barcode",
-          "Status",
-          "Product Name",
-          "Quantity",
-          "Price",
-          "Remarks",
-          "Timestamp",
+          'Courier Name',
+          'Barcode',
+          'Status',
+          'Product Name',
+          'Quantity',
+          'Price',
+          'Remarks',
+          'Timestamp',
         ];
         const expectedColumns = headerRow.length;
 
         // Ensure all data rows have the correct number of columns
         const validatedScannedData = scannedData.map((row) => {
           while (row.length < expectedColumns) {
-            row.push(""); // Add empty strings for missing columns
+            row.push(''); // Add empty strings for missing columns
           }
           return row.slice(0, expectedColumns); // Trim excess columns
         });
 
         const validatedUnscannedData = unscannedData.map((row) => {
           while (row.length < expectedColumns) {
-            row.push(""); // Add empty strings for missing columns
+            row.push(''); // Add empty strings for missing columns
           }
           return row.slice(0, expectedColumns); // Trim excess columns
         });
@@ -250,45 +250,45 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
             row
               .map((field) => {
                 // Properly escape CSV fields
-                const fieldStr = String(field || "");
+                const fieldStr = String(field || '');
                 // If field contains comma, newline, or quote, wrap in quotes and escape internal quotes
                 if (
-                  fieldStr.includes(",") ||
-                  fieldStr.includes("\n") ||
+                  fieldStr.includes(',') ||
+                  fieldStr.includes('\n') ||
                   fieldStr.includes('"')
                 ) {
                   return `"${fieldStr.replace(/"/g, '""')}"`;
                 }
                 return fieldStr;
               })
-              .join(",")
+              .join(','),
           )
-          .join("\n");
+          .join('\n');
 
-        const blob = new Blob([csvContent], { type: "text/csv" });
+        const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
 
         // Safe date formatting
         const dateString =
           selectedDate && !isNaN(selectedDate.getTime())
-            ? selectedDate.toISOString().split("T")[0]
-            : "unknown-date";
+            ? selectedDate.toISOString().split('T')[0]
+            : 'unknown-date';
 
         a.download = `rto-report-${dateString}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
       } catch (error) {
-        console.error("Error exporting CSV:", error);
-        alert("Error exporting CSV file. Please try again.");
+        console.error('Error exporting CSV:', error);
+        alert('Error exporting CSV file. Please try again.');
       }
     };
 
     console.timeEnd(
       `ReportTable_render_${
-        selectedDate?.toISOString().split("T")[0] || "no-date"
-      }`
+        selectedDate?.toISOString().split('T')[0] || 'no-date'
+      }`,
     );
 
     return (
@@ -304,12 +304,12 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
                   Reconciliation Report
                 </CardTitle>
                 <CardDescription className="text-gray-600 text-base mt-2">
-                  Export reconciliation results for{" "}
+                  Export reconciliation results for{' '}
                   <span className="font-semibold text-gray-800 bg-gray-100 px-2 py-1 rounded">
                     {selectedDate && !isNaN(selectedDate.getTime())
                       ? selectedDate.toLocaleDateString()
-                      : "Selected Date"}
-                  </span>{" "}
+                      : 'Selected Date'}
+                  </span>{' '}
                   (Includes matched, unmatched, and unscanned items)
                 </CardDescription>
               </div>
@@ -433,18 +433,18 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
                           ? item.timestamp instanceof Date
                             ? item.timestamp.toLocaleTimeString()
                             : new Date(item.timestamp).toLocaleTimeString()
-                          : "Unknown time"}
+                          : 'Unknown time'}
                       </div>
                     </div>
                     <Badge
-                      variant={item.match ? "default" : "destructive"}
+                      variant={item.match ? 'default' : 'destructive'}
                       className={
                         item.match
-                          ? "px-3 py-1 rounded-lg font-semibold bg-green-100 text-green-800 border-green-200"
-                          : "px-3 py-1 rounded-lg font-semibold bg-red-100 text-red-800 border-red-200"
+                          ? 'px-3 py-1 rounded-lg font-semibold bg-green-100 text-green-800 border-green-200'
+                          : 'px-3 py-1 rounded-lg font-semibold bg-red-100 text-red-800 border-red-200'
                       }
                     >
-                      {item.match ? "Matched" : "Unmatched"}
+                      {item.match ? 'Matched' : 'Unmatched'}
                     </Badge>
                   </div>
                 ))}
@@ -491,14 +491,14 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
                     {matchedData.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          {item.fulfilledBy || "Unknown Courier"}
+                          {item.fulfilledBy || 'Unknown Courier'}
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {item.barcode}
                         </TableCell>
                         <TableCell>{item.productName}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.price}</TableCell>
+                        <TableCell>₹{item.price}</TableCell>
                         <TableCell className="text-sm">
                           {item.isFromDifferentDate ? (
                             <div className="flex items-center gap-2">
@@ -558,19 +558,19 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
                     {unscannedProducts.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="text-center">
-                          {item.fulfilledBy || "Unknown Courier"}
+                          {item.fulfilledBy || 'Unknown Courier'}
                         </TableCell>
                         <TableCell className="font-mono text-sm text-center">
                           {item.barcode}
                         </TableCell>
                         <TableCell className="text-center">
-                          {item.productName || "Unknown Product"}
+                          {item.productName || 'Unknown Product'}
                         </TableCell>
                         <TableCell className="text-center">
                           {item.quantity || 1}
                         </TableCell>
                         <TableCell className="text-center">
-                          ${item.price || 0}
+                          ₹{item.price || 0}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -616,7 +616,7 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
                     {unmatchedData.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          {item.fulfilledBy || "Unknown Courier"}
+                          {item.fulfilledBy || 'Unknown Courier'}
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {item.barcode}
@@ -663,7 +663,7 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
                                   <br />
                                   <strong>Barcode:</strong> {item.barcode}
                                   <br />
-                                  <strong>Time:</strong>{" "}
+                                  <strong>Time:</strong>{' '}
                                   {item.timestamp.toLocaleTimeString()}
                                   <br />
                                   <br />
@@ -704,8 +704,8 @@ export const ReportTable: React.FC<ReportTableProps> = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 // Add display name for debugging
-ReportTable.displayName = "ReportTable";
+ReportTable.displayName = 'ReportTable';
