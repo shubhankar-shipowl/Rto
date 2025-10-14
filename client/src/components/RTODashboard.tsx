@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { RTOUpload } from "./RTOUpload";
-import { BarcodeScanner } from "./BarcodeScanner";
-import { ReportTable } from "./ReportTable";
+} from './ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { RTOUpload } from './RTOUpload';
+import { BarcodeScanner } from './BarcodeScanner';
+import { ReportTable } from './ReportTable';
+import ComplaintManagement from './ComplaintManagement';
 import {
   Upload,
   Scan,
@@ -18,12 +19,13 @@ import {
   CheckCircle,
   CalendarIcon,
   RefreshCw,
-} from "lucide-react";
-import { Button } from "./ui/button";
-import { Calendar as CalendarComponent } from "./ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { cn } from "../lib/utils";
-import { format } from "date-fns";
+  AlertTriangle,
+} from 'lucide-react';
+import { Button } from './ui/button';
+import { Calendar as CalendarComponent } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { cn } from '../lib/utils';
+import { format } from 'date-fns';
 
 interface BarcodeResult {
   barcode: string;
@@ -44,11 +46,11 @@ export const RTODashboard: React.FC = () => {
   // Reports section state
   const [reportsSelectedDate, setReportsSelectedDate] = useState<Date>(() => {
     const today = new Date();
-    console.log("🚀 Initializing reports selected date:", today);
+    console.log('🚀 Initializing reports selected date:', today);
     return today;
   });
   const [reportsScanResults, setReportsScanResults] = useState<BarcodeResult[]>(
-    []
+    [],
   );
   const [reportsLoading, setReportsLoading] = useState(false);
   const [isReportsDatePickerOpen, setIsReportsDatePickerOpen] = useState(false);
@@ -74,11 +76,11 @@ export const RTODashboard: React.FC = () => {
     loadingRef.current = true;
     setLoading(true);
     try {
-      const dateString = date.toISOString().split("T")[0];
+      const dateString = date.toISOString().split('T')[0];
 
       // Load uploaded data for the selected date
       const response = await fetch(
-        `http://localhost:5003/api/rto/data/${dateString}`
+        `http://localhost:5003/api/rto/data/${dateString}`,
       );
 
       if (response.ok) {
@@ -88,7 +90,7 @@ export const RTODashboard: React.FC = () => {
           setUploadedData({
             date: data.date,
             totalRecords: data.uploadInfo.totalRecords || 0,
-            originalFileName: data.uploadInfo.originalFileName || "",
+            originalFileName: data.uploadInfo.originalFileName || '',
             uploadDate: data.uploadInfo.uploadDate || new Date().toISOString(),
           });
 
@@ -116,7 +118,7 @@ export const RTODashboard: React.FC = () => {
 
       // Load scan results for the selected date
       const scanResponse = await fetch(
-        `http://localhost:5003/api/rto/scans/${dateString}`
+        `http://localhost:5003/api/rto/scans/${dateString}`,
       );
 
       if (scanResponse.ok) {
@@ -138,7 +140,7 @@ export const RTODashboard: React.FC = () => {
           // Update upload summary with scan results
           const scannedCount = mappedScanResults.length;
           const matchedCount = mappedScanResults.filter(
-            (scan) => scan.match
+            (scan) => scan.match,
           ).length;
           const unmatchedCount = scannedCount - matchedCount;
 
@@ -169,7 +171,7 @@ export const RTODashboard: React.FC = () => {
         }));
       }
     } catch (error) {
-      console.error("Error loading data for date:", error);
+      console.error('Error loading data for date:', error);
       setUploadedData(null);
       setScanResults([]);
     } finally {
@@ -186,7 +188,7 @@ export const RTODashboard: React.FC = () => {
   // Load overall upload summary on app startup
   const loadOverallUploadSummary = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5003/api/rto/summary");
+      const response = await fetch('http://localhost:5003/api/rto/summary');
       if (response.ok) {
         const data = await response.json();
         setUploadSummary({
@@ -195,19 +197,19 @@ export const RTODashboard: React.FC = () => {
           matched: data.matched || 0,
           unmatched: data.unmatched || 0,
         });
-        console.log("Loaded overall upload summary:", data);
+        console.log('Loaded overall upload summary:', data);
       }
     } catch (error) {
-      console.error("Error loading overall upload summary:", error);
+      console.error('Error loading overall upload summary:', error);
     }
   }, []);
 
   // Load RTO data for reports section to get total available count and unscanned products
   const loadReportsRTOData = useCallback(async (date: Date) => {
-    console.log("🔄 loadReportsRTOData called with date:", date);
+    console.log('🔄 loadReportsRTOData called with date:', date);
 
     if (!date || isNaN(date.getTime())) {
-      console.error("❌ Invalid date provided to loadReportsRTOData:", date);
+      console.error('❌ Invalid date provided to loadReportsRTOData:', date);
       setReportsTotalAvailable(0);
       setReportsUnscannedProducts([]);
       return;
@@ -216,21 +218,21 @@ export const RTODashboard: React.FC = () => {
     try {
       // Use local date formatting to avoid timezone issues
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
 
-      console.log("📅 Loading RTO data for reports date:", dateString);
+      console.log('📅 Loading RTO data for reports date:', dateString);
 
       const response = await fetch(
-        `http://localhost:5003/api/rto/data/${dateString}`
+        `http://localhost:5003/api/rto/data/${dateString}`,
       );
 
-      console.log("🌐 RTO data API response status:", response.status);
+      console.log('🌐 RTO data API response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Reports RTO data loaded:", data);
+        console.log('✅ Reports RTO data loaded:', data);
 
         // Count unique waybills from the barcodes array
         if (data.barcodes && Array.isArray(data.barcodes)) {
@@ -241,23 +243,23 @@ export const RTODashboard: React.FC = () => {
             }
           });
           const totalAvailable = uniqueWaybills.size;
-          console.log("📊 Total available waybills:", totalAvailable);
+          console.log('📊 Total available waybills:', totalAvailable);
           setReportsTotalAvailable(totalAvailable);
 
           // Store all products for unscanned calculation
           setReportsRTOData(data.barcodes || []);
         } else {
-          console.log("⚠️ No barcodes data found");
+          console.log('⚠️ No barcodes data found');
           setReportsTotalAvailable(0);
           setReportsRTOData([]);
         }
       } else {
-        console.log("⚠️ No RTO data found for date:", dateString);
+        console.log('⚠️ No RTO data found for date:', dateString);
         setReportsTotalAvailable(0);
         setReportsRTOData([]);
       }
     } catch (error) {
-      console.error("❌ Error loading reports RTO data:", error);
+      console.error('❌ Error loading reports RTO data:', error);
       setReportsTotalAvailable(0);
       setReportsRTOData([]);
     }
@@ -265,12 +267,12 @@ export const RTODashboard: React.FC = () => {
 
   // Load courier counts for reports section
   const loadReportsCourierCounts = useCallback(async (date: Date) => {
-    console.log("🔄 loadReportsCourierCounts called with date:", date);
+    console.log('🔄 loadReportsCourierCounts called with date:', date);
 
     if (!date || isNaN(date.getTime())) {
       console.error(
-        "❌ Invalid date provided to loadReportsCourierCounts:",
-        date
+        '❌ Invalid date provided to loadReportsCourierCounts:',
+        date,
       );
       setReportsCourierCounts([]);
       return;
@@ -279,73 +281,73 @@ export const RTODashboard: React.FC = () => {
     try {
       // Use local date formatting to avoid timezone issues
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
 
-      console.log("📅 Loading courier counts for reports date:", dateString);
+      console.log('📅 Loading courier counts for reports date:', dateString);
 
       const response = await fetch(
-        `http://localhost:5003/api/rto/courier-counts/${dateString}`
+        `http://localhost:5003/api/rto/courier-counts/${dateString}`,
       );
 
-      console.log("🌐 Courier counts API response status:", response.status);
+      console.log('🌐 Courier counts API response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Reports courier counts loaded:", data);
+        console.log('✅ Reports courier counts loaded:', data);
         setReportsCourierCounts(data.courierCounts || []);
       } else {
-        console.log("⚠️ No courier counts found for date:", dateString);
+        console.log('⚠️ No courier counts found for date:', dateString);
         setReportsCourierCounts([]);
       }
     } catch (error) {
-      console.error("❌ Error loading reports courier counts:", error);
+      console.error('❌ Error loading reports courier counts:', error);
       setReportsCourierCounts([]);
     }
   }, []);
 
   // Load scan results for reports section
   const loadReportsScanResults = useCallback(async (date: Date) => {
-    console.log("🔄 loadReportsScanResults called with date:", date);
+    console.log('🔄 loadReportsScanResults called with date:', date);
 
     if (!date || isNaN(date.getTime())) {
       console.error(
-        "❌ Invalid date provided to loadReportsScanResults:",
-        date
+        '❌ Invalid date provided to loadReportsScanResults:',
+        date,
       );
       setReportsScanResults([]);
       return;
     }
 
-    console.log("✅ Date is valid, starting to load data...");
+    console.log('✅ Date is valid, starting to load data...');
     setReportsLoading(true);
     const startTime = performance.now();
 
     try {
       // Use local date formatting to avoid timezone issues
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
 
-      console.log("📅 Loading scan results for reports date:", dateString);
+      console.log('📅 Loading scan results for reports date:', dateString);
       console.time(`API_reportsScanResults_${dateString}`);
 
       const response = await fetch(
-        `http://localhost:5003/api/rto/scans/${dateString}`
+        `http://localhost:5003/api/rto/scans/${dateString}`,
       );
 
-      console.log("🌐 API response status:", response.status);
+      console.log('🌐 API response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Reports scan results loaded:", data);
+        console.log('✅ Reports scan results loaded:', data);
         console.log(
-          "📊 Data type:",
+          '📊 Data type:',
           typeof data,
-          "Is array:",
-          Array.isArray(data)
+          'Is array:',
+          Array.isArray(data),
         );
 
         // Parse timestamps from strings to Date objects
@@ -356,22 +358,22 @@ export const RTODashboard: React.FC = () => {
             }))
           : [];
 
-        console.log("🔄 Processed data with Date objects:", processedData);
+        console.log('🔄 Processed data with Date objects:', processedData);
         setReportsScanResults(processedData);
       } else {
-        console.log("⚠️ No scan results found for date:", dateString);
+        console.log('⚠️ No scan results found for date:', dateString);
         setReportsScanResults([]);
       }
     } catch (error) {
-      console.error("❌ Error loading reports scan results:", error);
+      console.error('❌ Error loading reports scan results:', error);
       setReportsScanResults([]);
     } finally {
-      console.log("🏁 Loading completed, setting loading to false");
+      console.log('🏁 Loading completed, setting loading to false');
       setReportsLoading(false);
       const endTime = performance.now();
       console.timeEnd(`API_reportsScanResults_${dateString}`);
       console.log(
-        `⏱️ Scan results load time: ${(endTime - startTime).toFixed(2)}ms`
+        `⏱️ Scan results load time: ${(endTime - startTime).toFixed(2)}ms`,
       );
     }
   }, []);
@@ -384,18 +386,18 @@ export const RTODashboard: React.FC = () => {
   // Load reports data when reports date changes
   useEffect(() => {
     console.log(
-      "🔄 Reports useEffect triggered with date:",
-      reportsSelectedDate
+      '🔄 Reports useEffect triggered with date:',
+      reportsSelectedDate,
     );
     if (reportsSelectedDate && !isNaN(reportsSelectedDate.getTime())) {
       console.log(
-        "✅ Date is valid, calling loadReportsScanResults, loadReportsRTOData, and loadReportsCourierCounts"
+        '✅ Date is valid, calling loadReportsScanResults, loadReportsRTOData, and loadReportsCourierCounts',
       );
       loadReportsScanResults(reportsSelectedDate);
       loadReportsRTOData(reportsSelectedDate);
       loadReportsCourierCounts(reportsSelectedDate);
     } else {
-      console.log("❌ Invalid date in useEffect, skipping load");
+      console.log('❌ Invalid date in useEffect, skipping load');
     }
   }, [
     reportsSelectedDate,
@@ -407,22 +409,22 @@ export const RTODashboard: React.FC = () => {
   // Calculate unscanned products by comparing RTO data with scanned results
   const calculateUnscannedProducts = useCallback(() => {
     if (reportsRTOData.length === 0) {
-      console.log("📊 No RTO data to calculate unscanned products");
+      console.log('📊 No RTO data to calculate unscanned products');
       setReportsUnscannedProducts([]);
       return;
     }
 
     // Get scanned barcodes
     const scannedBarcodes = new Set(
-      reportsScanResults.map((result) => result.barcode)
+      reportsScanResults.map((result) => result.barcode),
     );
 
     // Find products that haven't been scanned
     const unscanned = reportsRTOData.filter(
-      (product) => product.barcode && !scannedBarcodes.has(product.barcode)
+      (product) => product.barcode && !scannedBarcodes.has(product.barcode),
     );
 
-    console.log("📊 Calculated unscanned products:", unscanned.length);
+    console.log('📊 Calculated unscanned products:', unscanned.length);
     setReportsUnscannedProducts(unscanned);
   }, [reportsRTOData, reportsScanResults]);
 
@@ -435,7 +437,7 @@ export const RTODashboard: React.FC = () => {
   const handleDeleteUnmatched = useCallback(
     async (barcode: string) => {
       if (!reportsSelectedDate) {
-        console.error("No date selected for deletion");
+        console.error('No date selected for deletion');
         return;
       }
 
@@ -443,32 +445,32 @@ export const RTODashboard: React.FC = () => {
         const year = reportsSelectedDate.getFullYear();
         const month = String(reportsSelectedDate.getMonth() + 1).padStart(
           2,
-          "0"
+          '0',
         );
-        const day = String(reportsSelectedDate.getDate()).padStart(2, "0");
+        const day = String(reportsSelectedDate.getDate()).padStart(2, '0');
         const dateString = `${year}-${month}-${day}`;
 
-        console.log("🗑️ Deleting unmatched scan:", {
+        console.log('🗑️ Deleting unmatched scan:', {
           barcode,
           date: dateString,
         });
 
         const response = await fetch(
-          "http://localhost:5003/api/rto/scan/unmatched",
+          'http://localhost:5003/api/rto/scan/unmatched',
           {
-            method: "DELETE",
+            method: 'DELETE',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               barcode: barcode,
               date: dateString,
             }),
-          }
+          },
         );
 
         if (response.ok) {
-          console.log("✅ Unmatched scan deleted successfully");
+          console.log('✅ Unmatched scan deleted successfully');
           // Refresh the reports data
           await loadReportsScanResults(reportsSelectedDate);
           await loadReportsRTOData(reportsSelectedDate);
@@ -477,16 +479,16 @@ export const RTODashboard: React.FC = () => {
           loadOverallUploadSummary();
         } else {
           const errorData = await response.json();
-          console.error("❌ Failed to delete unmatched scan:", errorData);
+          console.error('❌ Failed to delete unmatched scan:', errorData);
           alert(
             `Failed to delete unmatched scan: ${
-              errorData.message || "Unknown error"
-            }`
+              errorData.message || 'Unknown error'
+            }`,
           );
         }
       } catch (error) {
-        console.error("❌ Error deleting unmatched scan:", error);
-        alert("Failed to delete unmatched scan. Please try again.");
+        console.error('❌ Error deleting unmatched scan:', error);
+        alert('Failed to delete unmatched scan. Please try again.');
       }
     },
     [
@@ -495,18 +497,18 @@ export const RTODashboard: React.FC = () => {
       loadReportsRTOData,
       loadReportsCourierCounts,
       loadOverallUploadSummary,
-    ]
+    ],
   );
 
   // Debug upload summary changes
   useEffect(() => {
-    console.log("Upload summary updated:", uploadSummary);
+    console.log('Upload summary updated:', uploadSummary);
   }, [uploadSummary]);
 
   const handleUploadSuccess = (data: any) => {
-    console.log("Upload success data:", data);
-    console.log("Total records from data:", data.totalRecords);
-    console.log("Summary from data:", data.summary);
+    console.log('Upload success data:', data);
+    console.log('Total records from data:', data.totalRecords);
+    console.log('Summary from data:', data.summary);
 
     setUploadedData(data);
 
@@ -561,7 +563,7 @@ export const RTODashboard: React.FC = () => {
 
       {/* Navigation Tabs */}
       <Tabs defaultValue="upload" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl p-1.5 shadow-sm">
+        <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl p-1.5 shadow-sm">
           <TabsTrigger
             value="upload"
             className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all duration-200 font-medium py-2.5"
@@ -583,6 +585,13 @@ export const RTODashboard: React.FC = () => {
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Reports</span>
           </TabsTrigger>
+          <TabsTrigger
+            value="complaints"
+            className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all duration-200 font-medium py-2.5"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            <span className="hidden sm:inline">Complaints</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
@@ -601,7 +610,7 @@ export const RTODashboard: React.FC = () => {
                       uploadedData.summary?.totalProducts ||
                       0
                     } total records from Excel file`
-                  : "Upload the RTO Excel sheet. The Excel file must include required columns: WayBill Number and RTS Date."}
+                  : 'Upload the RTO Excel sheet. The Excel file must include required columns: WayBill Number and RTS Date.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -655,8 +664,8 @@ export const RTODashboard: React.FC = () => {
         <TabsContent value="reports" className="space-y-6">
           {(() => {
             try {
-              console.log("🎯 Rendering reports section...");
-              console.log("📊 Reports state:", {
+              console.log('🎯 Rendering reports section...');
+              console.log('📊 Reports state:', {
                 reportsSelectedDate,
                 reportsScanResults: reportsScanResults?.length || 0,
                 reportsLoading,
@@ -707,15 +716,15 @@ export const RTODashboard: React.FC = () => {
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full justify-start text-left font-normal h-12 border-2 border-gray-200 hover:border-blue-400 rounded-lg transition-all duration-200",
-                                !reportsSelectedDate && "text-gray-500"
+                                'w-full justify-start text-left font-normal h-12 border-2 border-gray-200 hover:border-blue-400 rounded-lg transition-all duration-200',
+                                !reportsSelectedDate && 'text-gray-500',
                               )}
                             >
                               <CalendarIcon className="mr-3 h-5 w-5 text-gray-600" />
                               {reportsSelectedDate &&
                               !isNaN(reportsSelectedDate.getTime())
-                                ? format(reportsSelectedDate, "PPP")
-                                : "Pick a date"}
+                                ? format(reportsSelectedDate, 'PPP')
+                                : 'Pick a date'}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
@@ -724,11 +733,11 @@ export const RTODashboard: React.FC = () => {
                               selected={reportsSelectedDate}
                               onSelect={(date) => {
                                 if (date && !isNaN(date.getTime())) {
-                                  console.log("Reports date selected:", date);
+                                  console.log('Reports date selected:', date);
                                   setReportsSelectedDate(date);
                                   setIsReportsDatePickerOpen(false);
                                 } else {
-                                  console.error("Invalid date selected:", date);
+                                  console.error('Invalid date selected:', date);
                                 }
                               }}
                               disabled={(date) => {
@@ -742,12 +751,12 @@ export const RTODashboard: React.FC = () => {
                           </PopoverContent>
                         </Popover>
                         <div className="text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
-                          Selected:{" "}
+                          Selected:{' '}
                           <span className="font-semibold">
                             {reportsSelectedDate &&
                             !isNaN(reportsSelectedDate.getTime())
-                              ? format(reportsSelectedDate, "PPP")
-                              : "No date selected"}
+                              ? format(reportsSelectedDate, 'PPP')
+                              : 'No date selected'}
                           </span>
                         </div>
                       </div>
@@ -764,12 +773,12 @@ export const RTODashboard: React.FC = () => {
                           Reconciliation Summary
                         </CardTitle>
                         <CardDescription className="text-gray-600 text-base">
-                          View all barcodes and WayBill Numbers reconciled for{" "}
+                          View all barcodes and WayBill Numbers reconciled for{' '}
                           <span className="font-semibold text-gray-800 bg-gray-100 px-2 py-1 rounded">
                             {reportsSelectedDate &&
                             !isNaN(reportsSelectedDate.getTime())
-                              ? format(reportsSelectedDate, "PPP")
-                              : "Selected Date"}
+                              ? format(reportsSelectedDate, 'PPP')
+                              : 'Selected Date'}
                           </span>
                         </CardDescription>
                       </CardHeader>
@@ -871,18 +880,18 @@ export const RTODashboard: React.FC = () => {
                                       {result.timestamp instanceof Date
                                         ? result.timestamp.toLocaleTimeString()
                                         : new Date(
-                                            result.timestamp
+                                            result.timestamp,
                                           ).toLocaleTimeString()}
                                     </div>
                                   </div>
                                   <div
                                     className={
                                       result.match
-                                        ? "px-3 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-800 border border-green-200"
-                                        : "px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-800 border border-red-200"
+                                        ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-800 border border-green-200'
+                                        : 'px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-800 border border-red-200'
                                     }
                                   >
-                                    {result.match ? "Matched" : "Unmatched"}
+                                    {result.match ? 'Matched' : 'Unmatched'}
                                   </div>
                                 </div>
                               ))}
@@ -895,11 +904,11 @@ export const RTODashboard: React.FC = () => {
                                   No scans found for this date
                                 </p>
                                 <p className="text-sm">
-                                  No barcode scans were recorded for{" "}
+                                  No barcode scans were recorded for{' '}
                                   {reportsSelectedDate &&
                                   !isNaN(reportsSelectedDate.getTime())
-                                    ? format(reportsSelectedDate, "PPP")
-                                    : "this date"}
+                                    ? format(reportsSelectedDate, 'PPP')
+                                    : 'this date'}
                                 </p>
                               </div>
                             )}
@@ -921,7 +930,7 @@ export const RTODashboard: React.FC = () => {
                 </>
               );
             } catch (error) {
-              console.error("❌ Error rendering reports section:", error);
+              console.error('❌ Error rendering reports section:', error);
               return (
                 <div className="p-8 text-center bg-red-50 border border-red-200 rounded-xl">
                   <div className="text-red-600 text-lg font-semibold mb-2">
@@ -930,7 +939,7 @@ export const RTODashboard: React.FC = () => {
                   <div className="text-gray-600 mb-4">
                     {error instanceof Error
                       ? error.message
-                      : "Unknown error occurred"}
+                      : 'Unknown error occurred'}
                   </div>
                   <button
                     onClick={() => window.location.reload()}
@@ -942,6 +951,10 @@ export const RTODashboard: React.FC = () => {
               );
             }
           })()}
+        </TabsContent>
+
+        <TabsContent value="complaints" className="space-y-6">
+          <ComplaintManagement />
         </TabsContent>
       </Tabs>
     </div>

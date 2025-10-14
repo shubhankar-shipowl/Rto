@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -131,6 +131,106 @@
 
   .rdp-cell {
     @apply flex items-center justify-center;
+  }
+
+  /* Badge alignment and sizing fixes */
+  .badge-container {
+    @apply flex items-center justify-center;
+  }
+
+  .badge-inline {
+    @apply inline-flex items-center;
+  }
+
+  /* Table cell alignment improvements */
+  .table-cell-center {
+    @apply flex items-center justify-center;
+  }
+
+  .table-cell-start {
+    @apply flex items-center justify-start;
+  }
+
+  .table-cell-end {
+    @apply flex items-center justify-end;
+  }
+
+  /* Button alignment fixes */
+  .button-with-icon {
+    @apply inline-flex items-center justify-center gap-2;
+  }
+
+  /* Consistent spacing for form elements */
+  .form-element {
+    @apply flex items-center gap-2;
+  }
+
+  /* Badge size consistency */
+  .badge-sm {
+    @apply px-2 py-0.5 text-xs min-h-[20px] flex items-center justify-center;
+  }
+
+  .badge-md {
+    @apply px-2.5 py-0.5 text-xs min-h-[22px] flex items-center justify-center;
+  }
+
+  .badge-lg {
+    @apply px-3 py-1 text-sm min-h-[24px] flex items-center justify-center;
+  }
+
+  /* Status badge specific styling */
+  .status-badge {
+    @apply inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-medium rounded-full min-w-[60px] min-h-[20px];
+  }
+
+  /* Action button alignment */
+  .action-button {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md min-h-[28px];
+  }
+
+  /* Table row alignment */
+  .table-row-content {
+    @apply flex items-center gap-2;
+  }
+
+  /* Icon alignment fixes */
+  .icon-align {
+    @apply flex items-center justify-center;
+  }
+
+  /* Text alignment utilities */
+  .text-vertical-center {
+    @apply flex items-center;
+  }
+
+  /* Badge text wrapping fix */
+  .badge-text-nowrap {
+    @apply whitespace-nowrap;
+  }
+
+  /* Consistent height for all interactive elements */
+  .interactive-element {
+    @apply min-h-[32px] flex items-center;
+  }
+
+  /* Table cell content alignment */
+  .table-cell-content {
+    @apply flex items-center;
+  }
+
+  /* Fix table cell vertical alignment */
+  .table-cell-vertical-center {
+    @apply align-middle;
+  }
+
+  /* Ensure proper table structure */
+  .table-fixed-layout {
+    @apply table-fixed;
+  }
+
+  /* Badge alignment in table cells */
+  .table-badge-container {
+    @apply flex items-center gap-2;
   }
 }
 
