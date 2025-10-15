@@ -202,10 +202,6 @@ const uploadRTOData = async (req, res) => {
 
     try {
       for (const [rtsDate, products] of Object.entries(productsByDate)) {
-        console.log(
-          `Storing ${products.length} products for RTS date: ${rtsDate}`,
-        );
-
         // Check if data already exists for this RTS date
         const [existingData, created] = await RTOData.findOrCreate({
           where: { date: rtsDate },
@@ -275,7 +271,10 @@ const uploadRTOData = async (req, res) => {
     });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: 'Failed to process Excel file' });
+    res.status(500).json({
+      error: 'Failed to process Excel file',
+      details: error.message,
+    });
   }
 };
 
