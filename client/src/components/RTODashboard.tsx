@@ -11,6 +11,7 @@ import { RTOUpload } from './RTOUpload';
 import { BarcodeScanner } from './BarcodeScanner';
 import { ReportTable } from './ReportTable';
 import ComplaintManagement from './ComplaintManagement';
+import { API_ENDPOINTS } from '../config/api';
 import {
   Upload,
   Scan,
@@ -79,9 +80,7 @@ export const RTODashboard: React.FC = () => {
       const dateString = date.toISOString().split('T')[0];
 
       // Load uploaded data for the selected date
-      const response = await fetch(
-        `http://localhost:5003/api/rto/data/${dateString}`,
-      );
+      const response = await fetch(API_ENDPOINTS.RTO.DATA(dateString));
 
       if (response.ok) {
         const data = await response.json();
@@ -117,9 +116,7 @@ export const RTODashboard: React.FC = () => {
       }
 
       // Load scan results for the selected date
-      const scanResponse = await fetch(
-        `http://localhost:5003/api/rto/scans/${dateString}`,
-      );
+      const scanResponse = await fetch(API_ENDPOINTS.RTO.SCANS(dateString));
 
       if (scanResponse.ok) {
         const scanData = await scanResponse.json();
@@ -188,7 +185,7 @@ export const RTODashboard: React.FC = () => {
   // Load overall upload summary on app startup
   const loadOverallUploadSummary = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5003/api/rto/summary');
+      const response = await fetch(API_ENDPOINTS.RTO.SUMMARY);
       if (response.ok) {
         const data = await response.json();
         setUploadSummary({
@@ -224,9 +221,7 @@ export const RTODashboard: React.FC = () => {
 
       console.log('📅 Loading RTO data for reports date:', dateString);
 
-      const response = await fetch(
-        `http://localhost:5003/api/rto/data/${dateString}`,
-      );
+      const response = await fetch(API_ENDPOINTS.RTO.DATA(dateString));
 
       console.log('🌐 RTO data API response status:', response.status);
 
@@ -288,7 +283,7 @@ export const RTODashboard: React.FC = () => {
       console.log('📅 Loading courier counts for reports date:', dateString);
 
       const response = await fetch(
-        `http://localhost:5003/api/rto/courier-counts/${dateString}`,
+        API_ENDPOINTS.RTO.COURIER_COUNTS(dateString),
       );
 
       console.log('🌐 Courier counts API response status:', response.status);
@@ -334,9 +329,7 @@ export const RTODashboard: React.FC = () => {
       console.log('📅 Loading scan results for reports date:', dateString);
       console.time(`API_reportsScanResults_${dateString}`);
 
-      const response = await fetch(
-        `http://localhost:5003/api/rto/scans/${dateString}`,
-      );
+      const response = await fetch(API_ENDPOINTS.RTO.SCANS(dateString));
 
       console.log('🌐 API response status:', response.status);
 
@@ -455,19 +448,16 @@ export const RTODashboard: React.FC = () => {
           date: dateString,
         });
 
-        const response = await fetch(
-          'http://localhost:5003/api/rto/scan/unmatched',
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              barcode: barcode,
-              date: dateString,
-            }),
+        const response = await fetch(API_ENDPOINTS.RTO.DELETE_UNMATCHED_SCAN, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
+          body: JSON.stringify({
+            barcode: barcode,
+            date: dateString,
+          }),
+        });
 
         if (response.ok) {
           console.log('✅ Unmatched scan deleted successfully');

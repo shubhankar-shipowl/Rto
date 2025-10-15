@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Trash2, Database, Calendar } from "lucide-react";
-import { toast } from "sonner";
+} from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Trash2, Database, Calendar } from 'lucide-react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '../config/api';
 
 interface UploadedData {
   id: number;
@@ -36,16 +37,16 @@ export const DataManagement: React.FC<DataManagementProps> = ({
   const loadUploadedData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5003/api/rto/uploads");
+      const response = await fetch(API_ENDPOINTS.RTO.UPLOADS);
       if (response.ok) {
         const data = await response.json();
         setUploadedData(data);
       } else {
-        toast.error("Failed to load uploaded data");
+        toast.error('Failed to load uploaded data');
       }
     } catch (error) {
-      console.error("Error loading uploaded data:", error);
-      toast.error("Failed to load uploaded data");
+      console.error('Error loading uploaded data:', error);
+      toast.error('Failed to load uploaded data');
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
   const deleteDataByDate = async (date: string) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete data for ${formatDate(date)}?`
+        `Are you sure you want to delete data for ${formatDate(date)}?`,
       )
     ) {
       return;
@@ -62,23 +63,20 @@ export const DataManagement: React.FC<DataManagementProps> = ({
 
     setDeleting(date);
     try {
-      const response = await fetch(
-        `http://localhost:5003/api/rto/uploads/${date}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.RTO.DELETE_UPLOAD(date), {
+        method: 'DELETE',
+      });
 
       if (response.ok) {
         toast.success(`Successfully deleted data for ${date}`);
         await loadUploadedData();
         onDataDeleted();
       } else {
-        toast.error("Failed to delete data");
+        toast.error('Failed to delete data');
       }
     } catch (error) {
-      console.error("Error deleting data:", error);
-      toast.error("Failed to delete data");
+      console.error('Error deleting data:', error);
+      toast.error('Failed to delete data');
     } finally {
       setDeleting(null);
     }
@@ -87,28 +85,28 @@ export const DataManagement: React.FC<DataManagementProps> = ({
   const deleteAllData = async () => {
     if (
       !window.confirm(
-        "Are you sure you want to delete ALL data? This cannot be undone."
+        'Are you sure you want to delete ALL data? This cannot be undone.',
       )
     ) {
       return;
     }
 
-    setDeleting("all");
+    setDeleting('all');
     try {
-      const response = await fetch("http://localhost:5003/api/rto/uploads", {
-        method: "DELETE",
+      const response = await fetch(API_ENDPOINTS.RTO.DELETE_ALL_UPLOADS, {
+        method: 'DELETE',
       });
 
       if (response.ok) {
-        toast.success("Successfully deleted all data");
+        toast.success('Successfully deleted all data');
         await loadUploadedData();
         onDataDeleted();
       } else {
-        toast.error("Failed to delete all data");
+        toast.error('Failed to delete all data');
       }
     } catch (error) {
-      console.error("Error deleting all data:", error);
-      toast.error("Failed to delete all data");
+      console.error('Error deleting all data:', error);
+      toast.error('Failed to delete all data');
     } finally {
       setDeleting(null);
     }
@@ -119,20 +117,20 @@ export const DataManagement: React.FC<DataManagementProps> = ({
   }, []);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -176,10 +174,10 @@ export const DataManagement: React.FC<DataManagementProps> = ({
                 variant="destructive"
                 size="sm"
                 className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                disabled={deleting === "all"}
+                disabled={deleting === 'all'}
                 onClick={deleteAllData}
               >
-                {deleting === "all" ? (
+                {deleting === 'all' ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     Deleting...
@@ -210,7 +208,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
                       </h4>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <span>
-                          Records: {data.uploadInfo?.totalRecords || "N/A"}
+                          Records: {data.uploadInfo?.totalRecords || 'N/A'}
                         </span>
                         <span>Uploaded: {formatDateTime(data.createdAt)}</span>
                         {data.uploadInfo?.originalFileName && (

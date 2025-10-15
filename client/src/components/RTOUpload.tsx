@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Upload, FileSpreadsheet } from "lucide-react";
+} from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Upload, FileSpreadsheet } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface RTOUploadProps {
   selectedDate?: Date;
@@ -29,23 +30,23 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
     if (selectedFile) {
       // Validate file type
       const allowedTypes = [
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-excel",
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
       ];
 
       if (allowedTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
         setUploadResult(null);
       } else {
-        alert("Please select a valid Excel file (.xlsx or .xls)");
-        event.target.value = "";
+        alert('Please select a valid Excel file (.xlsx or .xls)');
+        event.target.value = '';
       }
     }
   };
 
   const handleUpload = async () => {
     if (!file) {
-      alert("Please select a file");
+      alert('Please select a file');
       return;
     }
 
@@ -53,11 +54,11 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("date", new Date().toISOString().split("T")[0]);
+      formData.append('file', file);
+      formData.append('date', new Date().toISOString().split('T')[0]);
 
-      const response = await fetch("http://localhost:5003/api/rto/upload", {
-        method: "POST",
+      const response = await fetch(API_ENDPOINTS.RTO.UPLOAD, {
+        method: 'POST',
         body: formData,
       });
 
@@ -69,15 +70,15 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
         setFile(null);
         // Reset file input
         const fileInput = document.getElementById(
-          "file-upload"
+          'file-upload',
         ) as HTMLInputElement;
-        if (fileInput) fileInput.value = "";
+        if (fileInput) fileInput.value = '';
       } else {
-        throw new Error(result.error || "Upload failed");
+        throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("Upload failed: " + (error as Error).message);
+      console.error('Upload error:', error);
+      alert('Upload failed: ' + (error as Error).message);
     } finally {
       setIsUploading(false);
     }

@@ -13,6 +13,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
 import { AlertCircle, Mail, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface ComplaintDialogProps {
   isOpen: boolean;
@@ -103,7 +104,7 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5003/api/complaints', {
+      const response = await fetch(API_ENDPOINTS.COMPLAINTS.ALL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Keyboard,
 } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -170,7 +171,9 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       const [rtoResponse, scanResponse] = (await Promise.race([
         Promise.all([
           fetch(
-            `http://localhost:5003/api/rto/data/${dateString}?t=${timestamp}&r=${randomId}&nocache=1`,
+            `${API_ENDPOINTS.RTO.DATA(
+              dateString,
+            )}?t=${timestamp}&r=${randomId}&nocache=1`,
             {
               method: 'GET',
               headers: {
@@ -181,7 +184,9 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
             },
           ),
           fetch(
-            `http://localhost:5003/api/rto/scans/${dateString}?t=${timestamp}&r=${randomId}&nocache=1`,
+            `${API_ENDPOINTS.RTO.SCANS(
+              dateString,
+            )}?t=${timestamp}&r=${randomId}&nocache=1`,
             {
               method: 'GET',
               headers: {
@@ -199,7 +204,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       console.log('🌐 Scan response status:', scanResponse.status);
       console.log(
         '🌐 Requested URL:',
-        `http://localhost:5003/api/rto/data/${dateString}?t=${timestamp}`,
+        `${API_ENDPOINTS.RTO.DATA(dateString)}?t=${timestamp}`,
       );
 
       let totalAvailable = 0;
@@ -298,7 +303,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       console.log('📅 Loading courier counts for scanner date:', dateString);
 
       const response = await fetch(
-        `http://localhost:5003/api/rto/courier-counts/${dateString}`,
+        API_ENDPOINTS.RTO.COURIER_COUNTS(dateString),
       );
 
       console.log('🌐 Courier counts API response status:', response.status);
@@ -404,7 +409,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-      const response = await fetch('http://localhost:5003/api/rto/scan', {
+      const response = await fetch(API_ENDPOINTS.RTO.SCAN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

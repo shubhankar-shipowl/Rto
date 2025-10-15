@@ -39,6 +39,7 @@ import {
   ChevronRight,
   Trash2,
 } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface Complaint {
   id: string;
@@ -128,7 +129,7 @@ const ComplaintManagement: React.FC = () => {
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5003/api/complaints');
+      const response = await fetch(API_ENDPOINTS.COMPLAINTS.ALL);
       if (!response.ok) {
         throw new Error('Failed to fetch complaints');
       }
@@ -152,7 +153,7 @@ const ComplaintManagement: React.FC = () => {
     try {
       setActionLoading(true);
       const response = await fetch(
-        `http://localhost:5003/api/complaints/${selectedComplaint.id}/mail-done`,
+        API_ENDPOINTS.COMPLAINTS.MAIL_DONE(selectedComplaint.id),
         {
           method: 'PUT',
           headers: {
@@ -188,7 +189,7 @@ const ComplaintManagement: React.FC = () => {
     try {
       setActionLoading(true);
       const response = await fetch(
-        `http://localhost:5003/api/complaints/${selectedComplaint.id}/status`,
+        API_ENDPOINTS.COMPLAINTS.STATUS(selectedComplaint.id),
         {
           method: 'PUT',
           headers: {
@@ -223,7 +224,7 @@ const ComplaintManagement: React.FC = () => {
     try {
       setActionLoading(true);
       const response = await fetch(
-        `http://localhost:5003/api/complaints/${complaint.id}/status`,
+        API_ENDPOINTS.COMPLAINTS.STATUS(complaint.id),
         {
           method: 'PUT',
           headers: {
@@ -253,7 +254,7 @@ const ComplaintManagement: React.FC = () => {
   const handleDeleteAll = async () => {
     try {
       setActionLoading(true);
-      const response = await fetch('http://localhost:5003/api/complaints/all', {
+      const response = await fetch(API_ENDPOINTS.COMPLAINTS.DELETE_ALL, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

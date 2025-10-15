@@ -4,7 +4,8 @@ import React, {
   useState,
   useEffect,
   ReactNode,
-} from "react";
+} from 'react';
+import { API_ENDPOINTS, logApiConfig } from '../config/api';
 
 interface User {
   id: string;
@@ -33,12 +34,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check for existing session on mount
   useEffect(() => {
     const checkAuth = () => {
-      const savedUser = localStorage.getItem("rto_user");
+      const savedUser = localStorage.getItem('rto_user');
       if (savedUser) {
         try {
           setUser(JSON.parse(savedUser));
         } catch (error) {
-          localStorage.removeItem("rto_user");
+          localStorage.removeItem('rto_user');
         }
       }
       setIsLoading(false);
@@ -49,13 +50,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (
     username: string,
-    password: string
+    password: string,
   ): Promise<boolean> => {
     try {
-      const response = await fetch("http://localhost:5003/api/auth/login", {
-        method: "POST",
+      // Log API configuration for debugging
+      logApiConfig();
+
+      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
       });
@@ -64,20 +68,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data.success) {
         setUser(data.user);
-        localStorage.setItem("rto_user", JSON.stringify(data.user));
+        localStorage.setItem('rto_user', JSON.stringify(data.user));
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       return false;
     }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("rto_user");
+    localStorage.removeItem('rto_user');
   };
 
   const value: AuthContextType = {
@@ -93,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
