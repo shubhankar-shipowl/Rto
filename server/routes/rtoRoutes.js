@@ -20,11 +20,26 @@ const {
 router.post(
   '/upload',
   (req, res, next) => {
+    console.log('📤 Multer upload middleware called');
     upload.single('file')(req, res, (err) => {
       if (err) {
-        console.error('Multer error:', err);
-        return res.status(400).json({ error: err.message });
+        console.error('❌ Multer error:', err);
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            error: 'File too large. Maximum size is 10MB.',
+          });
+        }
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          return res.status(400).json({
+            error:
+              'Unexpected field name. Please use "file" as the field name.',
+          });
+        }
+        return res.status(400).json({
+          error: err.message || 'File upload failed',
+        });
       }
+      console.log('✅ Multer upload middleware completed successfully');
       next();
     });
   },

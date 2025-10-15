@@ -20,14 +20,49 @@ const clearCacheForDate = (date) => {
 // Upload and parse Excel file
 const uploadRTOData = async (req, res) => {
   try {
+    console.log('📤 Upload request received:', {
+      hasFile: !!req.file,
+      filePath: req.file?.path,
+      fileName: req.file?.originalname,
+      fileSize: req.file?.size,
+      body: req.body,
+    });
+
     if (!req.file) {
+      console.error('❌ No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const { date } = req.body;
     if (!date) {
+      console.error('❌ Date is required');
       return res.status(400).json({ error: 'Date is required' });
     }
+
+    // Check database connection before processing
+    try {
+      await sequelize.authenticate();
+      console.log('✅ Database connection verified');
+    } catch (dbError) {
+      console.error('❌ Database connection failed:', dbError.message);
+      return res.status(500).json({
+        error: 'Database connection failed. Please try again later.',
+        details:
+          'The system is currently unable to process uploads due to database connectivity issues.',
+      });
+    }
+
+    // Check if file exists before processing
+    const fs = require('fs');
+    if (!fs.existsSync(req.file.path)) {
+      console.error('❌ File does not exist at path:', req.file.path);
+      return res.status(500).json({
+        error: 'Uploaded file not found',
+        details: `File path: ${req.file.path}`,
+      });
+    }
+
+    console.log('✅ File exists, proceeding with Excel parsing...');
 
     // Parse Excel file
     const workbook = XLSX.readFile(req.file.path);
@@ -252,6 +287,21 @@ const uploadRTOData = async (req, res) => {
       0,
     );
 
+    // Clean up uploaded file after successful processing
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        console.log('🗑️ Cleaned up uploaded file:', req.file.path);
+      }
+    } catch (cleanupError) {
+      console.warn(
+        '⚠️ Failed to clean up uploaded file:',
+        cleanupError.message,
+      );
+    }
+
+    console.log('✅ Upload completed successfully');
     res.json({
       message: 'RTO data uploaded successfully',
       uploadDate: date,
@@ -270,7 +320,22 @@ const uploadRTOData = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('❌ Upload error:', error);
+
+    // Clean up uploaded file on error
+    try {
+      const fs = require('fs');
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        console.log('🗑️ Cleaned up uploaded file after error:', req.file.path);
+      }
+    } catch (cleanupError) {
+      console.warn(
+        '⚠️ Failed to clean up uploaded file after error:',
+        cleanupError.message,
+      );
+    }
+
     res.status(500).json({
       error: 'Failed to process Excel file',
       details: error.message,

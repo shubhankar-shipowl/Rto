@@ -24,6 +24,19 @@ const fs = require('fs');
 const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`📁 Created uploads directory: ${uploadsDir}`);
+} else {
+  console.log(`📁 Uploads directory exists: ${uploadsDir}`);
+}
+
+// Ensure proper permissions on uploads directory
+try {
+  fs.chmodSync(uploadsDir, 0o755);
+  console.log(`🔐 Set permissions on uploads directory: ${uploadsDir}`);
+} catch (permError) {
+  console.warn(
+    `⚠️ Could not set permissions on uploads directory: ${permError.message}`,
+  );
 }
 
 // Middleware
