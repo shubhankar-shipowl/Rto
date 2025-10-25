@@ -3,9 +3,12 @@ import { DailyReconciliation, ScannedBarcode, CalendarDay } from '../types';
 import { generateMockRTOItems, mockReconciliations } from '../data/mockData';
 
 export const useReconciliation = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0],
+  );
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [reconciliations, setReconciliations] = useState<Record<string, DailyReconciliation>>(mockReconciliations);
+  const [reconciliations, setReconciliations] =
+    useState<Record<string, DailyReconciliation>>(mockReconciliations);
 
   const getCurrentReconciliation = (): DailyReconciliation | null => {
     return reconciliations[selectedDate] || null;
@@ -13,7 +16,7 @@ export const useReconciliation = () => {
 
   const uploadRTOFile = (file: File, date: string) => {
     const rtoItems = generateMockRTOItems(date, 15);
-    
+
     const newReconciliation: DailyReconciliation = {
       date,
       totalUploaded: rtoItems.length,
@@ -22,10 +25,10 @@ export const useReconciliation = () => {
       unmatched: 0,
       matchRate: 0,
       rtoItems,
-      scannedBarcodes: []
+      scannedBarcodes: [],
     };
 
-    setReconciliations(prev => ({ ...prev, [date]: newReconciliation }));
+    setReconciliations((prev) => ({ ...prev, [date]: newReconciliation }));
     setSelectedDate(date);
   };
 
@@ -36,17 +39,19 @@ export const useReconciliation = () => {
         id: `scan-${Date.now()}`,
         barcode,
         scannedAt: new Date().toISOString(),
-        matched: false
+        matched: false,
       };
     }
 
-    const matchedItem = current.rtoItems.find(item => item.barcode === barcode);
+    const matchedItem = current.rtoItems.find(
+      (item) => item.barcode.toLowerCase() === barcode.toLowerCase(),
+    );
     const scanned: ScannedBarcode = {
       id: `scan-${Date.now()}`,
       barcode,
       scannedAt: new Date().toISOString(),
       matched: !!matchedItem,
-      rtoItem: matchedItem
+      rtoItem: matchedItem,
     };
 
     const updated = {
@@ -54,11 +59,13 @@ export const useReconciliation = () => {
       scannedBarcodes: [...current.scannedBarcodes, scanned],
       totalScanned: current.totalScanned + 1,
       matched: matchedItem ? current.matched + 1 : current.matched,
-      unmatched: matchedItem ? current.unmatched : current.unmatched + 1
+      unmatched: matchedItem ? current.unmatched : current.unmatched + 1,
     };
-    updated.matchRate = Math.round((updated.matched / updated.totalScanned) * 100);
+    updated.matchRate = Math.round(
+      (updated.matched / updated.totalScanned) * 100,
+    );
 
-    setReconciliations(prev => ({ ...prev, [selectedDate]: updated }));
+    setReconciliations((prev) => ({ ...prev, [selectedDate]: updated }));
     return scanned;
   };
 
@@ -74,12 +81,16 @@ export const useReconciliation = () => {
     }
 
     for (let day = 1; day <= lastDay.getDate(); day++) {
-      const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(
+        day,
+      ).padStart(2, '0')}`;
       const rec = reconciliations[date];
       days.push({
         date,
         hasData: !!rec,
-        summary: rec ? { totalScanned: rec.totalScanned, matchRate: rec.matchRate } : undefined
+        summary: rec
+          ? { totalScanned: rec.totalScanned, matchRate: rec.matchRate }
+          : undefined,
       });
     }
 
@@ -87,7 +98,7 @@ export const useReconciliation = () => {
   };
 
   const changeMonth = (direction: 'prev' | 'next') => {
-    setCurrentMonth(prev => {
+    setCurrentMonth((prev) => {
       const newMonth = new Date(prev);
       newMonth.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
       return newMonth;
@@ -97,8 +108,12 @@ export const useReconciliation = () => {
   const exportReport = (format: 'excel' | 'pdf') => {
     const current = getCurrentReconciliation();
     if (!current) return;
-    
-    alert(`Exporting ${format.toUpperCase()} report for ${selectedDate}\nTotal Items: ${current.totalUploaded}\nScanned: ${current.totalScanned}\nMatch Rate: ${current.matchRate}%`);
+
+    alert(
+      `Exporting ${format.toUpperCase()} report for ${selectedDate}\nTotal Items: ${
+        current.totalUploaded
+      }\nScanned: ${current.totalScanned}\nMatch Rate: ${current.matchRate}%`,
+    );
   };
 
   return {
@@ -111,6 +126,6 @@ export const useReconciliation = () => {
     scanBarcode,
     getCalendarDays,
     changeMonth,
-    exportReport
+    exportReport,
   };
 };

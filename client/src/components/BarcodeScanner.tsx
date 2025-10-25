@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ErrorPopup } from './ErrorPopup';
 
 interface BarcodeResult {
   barcode: string;
@@ -104,6 +105,21 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorPopup, setErrorPopup] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'error' | 'warning' | 'info' | 'success';
+    previousScan?: {
+      timestamp: string;
+      status: string;
+    };
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'error',
+  });
   const [isManualMode, setIsManualMode] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
@@ -388,7 +404,12 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       (result) => result.barcode === trimmedBarcode,
     );
     if (alreadyScanned) {
-      setError(`Barcode ${trimmedBarcode} has already been scanned`);
+      setErrorPopup({
+        isOpen: true,
+        title: 'Barcode Already Scanned',
+        message: `The barcode "${trimmedBarcode}" has already been scanned for this date.`,
+        type: 'warning',
+      });
       return;
     }
 
@@ -442,9 +463,16 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           };
           setScanResults((prev) => [duplicateResult, ...prev]);
           onScanResult(duplicateResult);
-          setError(
-            `Barcode "${barcode.trim()}" already scanned for ${dateString}.`,
-          );
+          setErrorPopup({
+            isOpen: true,
+            title: 'Barcode Already Scanned',
+            message: `The barcode "${barcode.trim()}" has already been scanned for ${dateString}.`,
+            type: 'warning',
+            previousScan: {
+              timestamp: data.previousScan?.timestamp || 'N/A',
+              status: data.previousScan?.status || 'N/A',
+            },
+          });
         } else {
           throw new Error(data.error || 'Failed to scan barcode');
         }
@@ -479,13 +507,21 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       console.error('Scan error:', err);
 
       if (err.name === 'AbortError') {
-        setError('Scan request timed out. Please try again.');
+        setErrorPopup({
+          isOpen: true,
+          title: 'Request Timeout',
+          message: 'Scan request timed out. Please try again.',
+          type: 'error',
+        });
       } else {
-        setError(
-          `Error scanning barcode: ${
+        setErrorPopup({
+          isOpen: true,
+          title: 'Scan Error',
+          message: `Error scanning barcode: ${
             err instanceof Error ? err.message : String(err)
           }`,
-        );
+          type: 'error',
+        });
       }
     } finally {
       setIsLoading(false);
@@ -537,6 +573,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
   // Clear error and input, reload data, and refocus input
   const handleRetry = useCallback(() => {
     setError(null);
+    setErrorPopup({ isOpen: false, title: '', message: '', type: 'error' });
     setBarcode('');
     setScanResults([]);
     setScanSummary({
@@ -551,6 +588,24 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       if (inputRef.current) inputRef.current.focus();
     }, 0);
   }, [selectedDate, loadScanData]);
+
+  // Handle error popup close
+  const handleErrorPopupClose = useCallback(() => {
+    setErrorPopup({ isOpen: false, title: '', message: '', type: 'error' });
+    setBarcode('');
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Handle error popup retry
+  const handleErrorPopupRetry = useCallback(() => {
+    setErrorPopup({ isOpen: false, title: '', message: '', type: 'error' });
+    setBarcode('');
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   // Show loading state
   if (isLoading && !error) {
@@ -906,6 +961,18 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Error Popup */}
+      <ErrorPopup
+        isOpen={errorPopup.isOpen}
+        onClose={handleErrorPopupClose}
+        onRetry={handleErrorPopupRetry}
+        title={errorPopup.title}
+        message={errorPopup.message}
+        type={errorPopup.type}
+        previousScan={errorPopup.previousScan}
+        showRetry={true}
+      />
     </div>
   );
 };

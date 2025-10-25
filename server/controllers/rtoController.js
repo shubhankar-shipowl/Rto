@@ -17,6 +17,12 @@ const clearCacheForDate = (date) => {
   console.log(`🗑️ Cleared cache for date: ${date}`);
 };
 
+// Clear overall summary cache
+const clearOverallSummaryCache = () => {
+  dataCache.delete('overall_summary');
+  console.log('🗑️ Cleared overall summary cache');
+};
+
 // Upload and parse Excel file
 const uploadRTOData = async (req, res) => {
   try {
@@ -302,6 +308,10 @@ const uploadRTOData = async (req, res) => {
     }
 
     console.log('✅ Upload completed successfully');
+
+    // Clear overall summary cache since new data was uploaded
+    clearOverallSummaryCache();
+
     res.json({
       message: 'RTO data uploaded successfully',
       uploadDate: date,
@@ -432,11 +442,13 @@ const scanBarcode = async (req, res) => {
       barcodes = [];
     }
 
-    // Check if this barcode has already been scanned today (optimized query)
+    // Check if this barcode has already been scanned today (case-insensitive comparison)
     const existingScan = await ScanResult.findOne({
       where: {
         date: date,
-        barcode: barcode,
+        barcode: {
+          [Op.eq]: barcode, // Exact match for duplicate check
+        },
       },
       attributes: [
         'match',
@@ -448,7 +460,8 @@ const scanBarcode = async (req, res) => {
       ],
     });
 
-    if (existingScan) {
+    // Only prevent re-scanning if the previous scan was successful (matched)
+    if (existingScan && existingScan.match) {
       return res.status(400).json({
         error: 'This barcode has already been scanned for this date',
         alreadyScanned: true,
@@ -463,13 +476,25 @@ const scanBarcode = async (req, res) => {
       });
     }
 
-    // Optimized barcode matching using Map for O(1) lookup
+    // If there's an existing unmatched scan, delete it to allow re-scanning
+    if (existingScan && !existingScan.match) {
+      await ScanResult.destroy({
+        where: {
+          date: date,
+          barcode: barcode,
+        },
+      });
+    }
+
+    // Optimized barcode matching using Map for O(1) lookup with case-insensitive comparison
     const barcodeMap = new Map();
     barcodes.forEach((item, index) => {
-      barcodeMap.set(item.barcode.toString(), { ...item, index });
+      // Store both original and lowercase versions for case-insensitive lookup
+      const barcodeKey = item.barcode.toString().toLowerCase();
+      barcodeMap.set(barcodeKey, { ...item, index });
     });
 
-    const matchedBarcode = barcodeMap.get(barcode.toString());
+    const matchedBarcode = barcodeMap.get(barcode.toString().toLowerCase());
     const matchedBarcodeIndex = matchedBarcode ? matchedBarcode.index : -1;
 
     if (matchedBarcodeIndex !== -1) {
@@ -549,6 +574,8 @@ const scanBarcode = async (req, res) => {
 
         // Clear reports cache for this date
         clearCacheForDate(date);
+        // Also clear overall summary cache since scan counts changed
+        clearOverallSummaryCache();
 
         res.json({
           match: true,
@@ -628,6 +655,8 @@ const scanBarcode = async (req, res) => {
 
         // Clear reports cache for this date
         clearCacheForDate(date);
+        // Also clear overall summary cache since scan counts changed
+        clearOverallSummaryCache();
 
         res.json({
           match: false,
@@ -878,41 +907,128 @@ const getScanResultsByDate = async (req, res) => {
 // Get overall upload summary across all dates
 const getOverallUploadSummary = async (req, res) => {
   try {
+    console.log('📊 getOverallUploadSummary called');
+
+    // Check if we should bypass cache
+    const bypassCache = req.query.force === 'true';
+    const cacheKey = 'overall_summary';
+
+    // In PM2 or production environments, be more aggressive about cache invalidation
+    const isPM2 = process.env.PM2_HOME || process.env.PM2_USAGE;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const shouldBypassCache = bypassCache || isPM2 || isProduction;
+
+    if (!shouldBypassCache) {
+      const cachedSummary = dataCache.get(cacheKey);
+      if (cachedSummary && Date.now() - cachedSummary.timestamp < CACHE_TTL) {
+        console.log('📊 Using cached overall summary');
+        return res.status(200).json(cachedSummary.data);
+      }
+    } else {
+      console.log(
+        '📊 Bypassing cache due to:',
+        bypassCache
+          ? 'force=true'
+          : isPM2
+          ? 'PM2 environment'
+          : 'production environment',
+      );
+    }
+
     // Get all RTO data to sum up total records
-    const allRTOData = await RTOData.findAll();
+    const allRTOData = await RTOData.findAll({
+      attributes: ['id', 'date', 'uploadInfo', 'reconciliationSummary'],
+      order: [['date', 'DESC']],
+    });
+
+    console.log(`📊 Found ${allRTOData.length} RTO data records`);
 
     // Sum up totalRecords from each date's uploadInfo
     let totalRecords = 0;
+    let totalScanned = 0;
+    let totalMatched = 0;
+    let totalUnmatched = 0;
+
     allRTOData.forEach((data) => {
-      const uploadInfo =
-        typeof data.uploadInfo === 'string'
-          ? JSON.parse(data.uploadInfo)
-          : data.uploadInfo;
-      totalRecords += uploadInfo.totalRecords || 0;
+      try {
+        const uploadInfo =
+          typeof data.uploadInfo === 'string'
+            ? JSON.parse(data.uploadInfo)
+            : data.uploadInfo;
+        totalRecords += uploadInfo.totalRecords || 0;
+
+        // Also get summary from reconciliationSummary if available
+        const reconciliationSummary =
+          typeof data.reconciliationSummary === 'string'
+            ? JSON.parse(data.reconciliationSummary)
+            : data.reconciliationSummary;
+
+        if (reconciliationSummary) {
+          totalScanned += reconciliationSummary.totalScanned || 0;
+          totalMatched += reconciliationSummary.matched || 0;
+          totalUnmatched += reconciliationSummary.unmatched || 0;
+        }
+      } catch (parseError) {
+        console.warn(
+          `⚠️ Error parsing data for date ${data.date}:`,
+          parseError.message,
+        );
+      }
     });
 
-    // Get total scanned records across all dates
-    const scanned = await ScanResult.count();
+    // Fallback: Get counts from ScanResult table if reconciliationSummary is not available
+    let scannedFromDB = 0;
+    let matchedFromDB = 0;
+    let unmatchedFromDB = 0;
 
-    // Get total matched records across all dates
-    const matched = await ScanResult.count({
-      where: { match: true },
-    });
+    try {
+      scannedFromDB = await ScanResult.count();
+      matchedFromDB = await ScanResult.count({
+        where: { match: true },
+      });
+      unmatchedFromDB = await ScanResult.count({
+        where: { match: false },
+      });
+      console.log(
+        `📊 Database counts - Scanned: ${scannedFromDB}, Matched: ${matchedFromDB}, Unmatched: ${unmatchedFromDB}`,
+      );
+    } catch (dbError) {
+      console.error('❌ Error fetching counts from ScanResult table:', dbError);
+    }
 
-    // Get total unmatched records across all dates
-    const unmatched = await ScanResult.count({
-      where: { match: false },
-    });
+    // Always use database counts as the source of truth for accuracy
+    // The reconciliationSummary might be outdated or inconsistent
+    const finalScanned = scannedFromDB;
+    const finalMatched = matchedFromDB;
+    const finalUnmatched = unmatchedFromDB;
 
-    res.status(200).json({
+    const summary = {
       totalRecords,
-      scanned,
-      matched,
-      unmatched,
+      scanned: finalScanned,
+      matched: finalMatched,
+      unmatched: finalUnmatched,
+    };
+
+    console.log('📊 Final summary:', summary);
+
+    // Cache the summary
+    dataCache.set(cacheKey, {
+      data: summary,
+      timestamp: Date.now(),
     });
+
+    res.status(200).json(summary);
   } catch (error) {
-    console.error('Error fetching overall upload summary:', error);
-    res.status(500).json({ message: 'Failed to fetch overall upload summary' });
+    console.error('❌ Error fetching overall upload summary:', error);
+
+    // Return fallback data instead of error
+    res.status(200).json({
+      totalRecords: 0,
+      scanned: 0,
+      matched: 0,
+      unmatched: 0,
+      error: 'Failed to fetch summary data',
+    });
   }
 };
 

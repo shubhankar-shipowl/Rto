@@ -21,8 +21,10 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
+  Search,
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -147,6 +149,11 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   );
   const [complaintsLoaded, setComplaintsLoaded] = useState(false);
 
+  // Search state
+  const [matchedSearchTerm, setMatchedSearchTerm] = useState('');
+  const [unscannedSearchTerm, setUnscannedSearchTerm] = useState('');
+  const [unmatchedSearchTerm, setUnmatchedSearchTerm] = useState('');
+
   // Memoized data processing
   const processedData = useMemo(() => {
     const safeData = Array.isArray(data) ? data : [];
@@ -184,6 +191,38 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       unmatchedData,
     };
   }, [data, rtoData]);
+
+  // Filtered data based on search terms
+  const filteredData = useMemo(() => {
+    const filterItems = (items: any[], searchTerm: string) => {
+      if (!searchTerm.trim()) return items;
+
+      const term = searchTerm.toLowerCase();
+      return items.filter(
+        (item) =>
+          item.barcode?.toLowerCase().includes(term) ||
+          item.productName?.toLowerCase().includes(term) ||
+          item.fulfilledBy?.toLowerCase().includes(term) ||
+          item.orderId?.toString().includes(term),
+      );
+    };
+
+    return {
+      matchedData: filterItems(processedData.matchedData, matchedSearchTerm),
+      unscannedData: filterItems(unscannedProducts, unscannedSearchTerm),
+      unmatchedData: filterItems(
+        processedData.unmatchedData,
+        unmatchedSearchTerm,
+      ),
+    };
+  }, [
+    processedData.matchedData,
+    processedData.unmatchedData,
+    unscannedProducts,
+    matchedSearchTerm,
+    unscannedSearchTerm,
+    unmatchedSearchTerm,
+  ]);
 
   // Complaint handlers
   const handleOpenComplaint = useCallback(
@@ -478,11 +517,24 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">
-            Matched Items ({processedData.matchedData.length})
+            Matched Items ({filteredData.matchedData.length})
           </CardTitle>
         </CardHeader>
       </div>
       <CardContent className="p-6">
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search by barcode, product name, courier, or order ID..."
+              value={matchedSearchTerm}
+              onChange={(e) => setMatchedSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+        </div>
         <div className="max-h-96 overflow-y-auto">
           <Table>
             <TableHeader>
@@ -493,7 +545,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processedData.matchedData.map((item, index) => (
+              {filteredData.matchedData.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>{item.fulfilledBy || 'Unknown Courier'}</TableCell>
                   <TableCell className="font-mono text-sm">
@@ -505,13 +557,15 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                   <TableCell>{renderActionButton(item)}</TableCell>
                 </TableRow>
               ))}
-              {processedData.matchedData.length === 0 && (
+              {filteredData.matchedData.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={TABLE_CONFIGS.matched.columns}
                     className="text-center text-gray-500"
                   >
-                    No matched items
+                    {matchedSearchTerm
+                      ? 'No items match your search'
+                      : 'No matched items'}
                   </TableCell>
                 </TableRow>
               )}
@@ -527,11 +581,24 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-6 text-white">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">
-            Unscanned Items ({unscannedProducts.length})
+            Unscanned Items ({filteredData.unscannedData.length})
           </CardTitle>
         </CardHeader>
       </div>
       <CardContent className="p-6">
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search by barcode, product name, courier, or order ID..."
+              value={unscannedSearchTerm}
+              onChange={(e) => setUnscannedSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            />
+          </div>
+        </div>
         <div className="max-h-96 overflow-y-auto">
           <Table>
             <TableHeader>
@@ -544,7 +611,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {unscannedProducts.map((item, index) => (
+              {filteredData.unscannedData.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell className="text-center">
                     {item.fulfilledBy || 'Unknown Courier'}
@@ -563,13 +630,15 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                   </TableCell>
                 </TableRow>
               ))}
-              {unscannedProducts.length === 0 && (
+              {filteredData.unscannedData.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={TABLE_CONFIGS.unscanned.columns}
                     className="text-center text-gray-500"
                   >
-                    No unscanned items
+                    {unscannedSearchTerm
+                      ? 'No items match your search'
+                      : 'No unscanned items'}
                   </TableCell>
                 </TableRow>
               )}
@@ -585,11 +654,24 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       <div className="bg-gradient-to-r from-red-600 to-pink-600 p-6 text-white">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">
-            Unmatched Items ({processedData.unmatchedData.length})
+            Unmatched Items ({filteredData.unmatchedData.length})
           </CardTitle>
         </CardHeader>
       </div>
       <CardContent className="p-6">
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search by barcode, product name, courier, or order ID..."
+              value={unmatchedSearchTerm}
+              onChange={(e) => setUnmatchedSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            />
+          </div>
+        </div>
         <div className="max-h-96 overflow-y-auto">
           <Table>
             <TableHeader>
@@ -600,7 +682,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processedData.unmatchedData.map((item, index) => (
+              {filteredData.unmatchedData.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>{item.fulfilledBy || 'Unknown Courier'}</TableCell>
                   <TableCell className="font-mono text-sm">
@@ -674,13 +756,15 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                   </TableCell>
                 </TableRow>
               ))}
-              {processedData.unmatchedData.length === 0 && (
+              {filteredData.unmatchedData.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={TABLE_CONFIGS.unmatched.columns}
                     className="text-center text-gray-500"
                   >
-                    No unmatched items
+                    {unmatchedSearchTerm
+                      ? 'No items match your search'
+                      : 'No unmatched items'}
                   </TableCell>
                 </TableRow>
               )}

@@ -61,11 +61,24 @@ export const RTODashboard: React.FC = () => {
   >([]);
   const [reportsRTOData, setReportsRTOData] = useState<any[]>([]);
   const [reportsCourierCounts, setReportsCourierCounts] = useState<any[]>([]);
-  const [uploadSummary, setUploadSummary] = useState({
-    totalRecords: 0,
-    scanned: 0,
-    matched: 0,
-    unmatched: 0,
+  const [uploadSummary, setUploadSummary] = useState(() => {
+    // Try to load from localStorage on initialization
+    const saved = localStorage.getItem('rto-upload-summary');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('📊 Loaded summary from localStorage:', parsed);
+        return parsed;
+      } catch (error) {
+        console.warn('Failed to parse saved summary:', error);
+      }
+    }
+    return {
+      totalRecords: 0,
+      scanned: 0,
+      matched: 0,
+      unmatched: 0,
+    };
   });
   const loadingRef = useRef(false);
 
@@ -183,23 +196,96 @@ export const RTODashboard: React.FC = () => {
   }, [selectedDate, loadDataForDate]);
 
   // Load overall upload summary on app startup
-  const loadOverallUploadSummary = useCallback(async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.RTO.SUMMARY);
-      if (response.ok) {
-        const data = await response.json();
-        setUploadSummary({
-          totalRecords: data.totalRecords || 0,
-          scanned: data.scanned || 0,
-          matched: data.matched || 0,
-          unmatched: data.unmatched || 0,
-        });
-        console.log('Loaded overall upload summary:', data);
+  const loadOverallUploadSummary = useCallback(
+    async (retryCount = 0, forceRefresh = false) => {
+      try {
+        console.log(
+          `📊 Loading overall upload summary (attempt ${
+            retryCount + 1
+          }, force: ${forceRefresh})`,
+        );
+        const url = forceRefresh
+          ? `${API_ENDPOINTS.RTO.SUMMARY}?force=true`
+          : API_ENDPOINTS.RTO.SUMMARY;
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📊 Raw summary data received:', data);
+
+          const summary = {
+            totalRecords: data.totalRecords || 0,
+            scanned: data.scanned || 0,
+            matched: data.matched || 0,
+            unmatched: data.unmatched || 0,
+          };
+
+          // Only update if the data has actually changed
+          setUploadSummary((prevSummary) => {
+            const hasChanged =
+              prevSummary.totalRecords !== summary.totalRecords ||
+              prevSummary.scanned !== summary.scanned ||
+              prevSummary.matched !== summary.matched ||
+              prevSummary.unmatched !== summary.unmatched;
+
+            if (hasChanged) {
+              // Save to localStorage for persistence
+              localStorage.setItem(
+                'rto-upload-summary',
+                JSON.stringify(summary),
+              );
+              console.log('✅ Loaded overall upload summary:', summary);
+              return summary;
+            } else {
+              console.log('📊 Summary data unchanged, keeping existing data');
+              return prevSummary;
+            }
+          });
+
+          // Only retry if we got zeros AND there should be data (totalRecords > 0)
+          if (
+            retryCount === 0 &&
+            summary.scanned === 0 &&
+            summary.matched === 0 &&
+            summary.unmatched === 0 &&
+            summary.totalRecords > 0
+          ) {
+            console.log(
+              '⚠️ Got zeros on first attempt but totalRecords > 0, retrying...',
+            );
+            setTimeout(() => loadOverallUploadSummary(1, true), 1000);
+          }
+        } else {
+          console.error(
+            '❌ Failed to fetch summary:',
+            response.status,
+            response.statusText,
+          );
+          if (retryCount === 0) {
+            console.log('🔄 Retrying summary fetch...');
+            setTimeout(() => loadOverallUploadSummary(1, true), 1000);
+          } else {
+            // If retry also failed, don't reset the existing data
+            console.warn(
+              '⚠️ Summary fetch failed after retry, keeping existing data',
+            );
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error loading overall upload summary:', error);
+        if (retryCount === 0) {
+          console.log('🔄 Retrying summary fetch after error...');
+          setTimeout(() => loadOverallUploadSummary(1, true), 1000);
+        } else {
+          // If retry also failed, don't reset the existing data
+          console.warn(
+            '⚠️ Summary fetch failed after retry, keeping existing data',
+          );
+        }
       }
-    } catch (error) {
-      console.error('Error loading overall upload summary:', error);
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Load RTO data for reports section to get total available count and unscanned products
   const loadReportsRTOData = useCallback(async (date: Date) => {
@@ -376,6 +462,35 @@ export const RTODashboard: React.FC = () => {
     loadOverallUploadSummary();
   }, [loadOverallUploadSummary]);
 
+  // Refresh summary when page becomes visible (handles refresh scenarios)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Only refresh if we don't have valid data
+        if (uploadSummary.totalRecords === 0) {
+          console.log('🔄 Page became visible, refreshing summary...');
+          loadOverallUploadSummary(0, true);
+        }
+      }
+    };
+
+    const handleFocus = () => {
+      // Only refresh if we don't have valid data
+      if (uploadSummary.totalRecords === 0) {
+        console.log('🔄 Window focused, refreshing summary...');
+        loadOverallUploadSummary(0, true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadOverallUploadSummary, uploadSummary.totalRecords]);
+
   // Load reports data when reports date changes
   useEffect(() => {
     console.log(
@@ -462,11 +577,34 @@ export const RTODashboard: React.FC = () => {
         if (response.ok) {
           console.log('✅ Unmatched scan deleted successfully');
           // Refresh the reports data
-          await loadReportsScanResults(reportsSelectedDate);
-          await loadReportsRTOData(reportsSelectedDate);
-          await loadReportsCourierCounts(reportsSelectedDate);
+          try {
+            await loadReportsScanResults(reportsSelectedDate);
+            console.log('✅ loadReportsScanResults completed');
+          } catch (error) {
+            console.error('❌ Error in loadReportsScanResults:', error);
+          }
+
+          try {
+            await loadReportsRTOData(reportsSelectedDate);
+            console.log('✅ loadReportsRTOData completed');
+          } catch (error) {
+            console.error('❌ Error in loadReportsRTOData:', error);
+          }
+
+          try {
+            await loadReportsCourierCounts(reportsSelectedDate);
+            console.log('✅ loadReportsCourierCounts completed');
+          } catch (error) {
+            console.error('❌ Error in loadReportsCourierCounts:', error);
+          }
+
           // Also refresh overall summary
-          loadOverallUploadSummary();
+          try {
+            await loadOverallUploadSummary();
+            console.log('✅ loadOverallUploadSummary completed');
+          } catch (error) {
+            console.error('❌ Error in loadOverallUploadSummary:', error);
+          }
         } else {
           const errorData = await response.json();
           console.error('❌ Failed to delete unmatched scan:', errorData);
@@ -478,7 +616,10 @@ export const RTODashboard: React.FC = () => {
         }
       } catch (error) {
         console.error('❌ Error deleting unmatched scan:', error);
-        alert('Failed to delete unmatched scan. Please try again.');
+        // Only show alert for actual deletion errors, not refresh errors
+        if (error.message && !error.message.includes('loadReports')) {
+          alert('Failed to delete unmatched scan. Please try again.');
+        }
       }
     },
     [
@@ -501,6 +642,9 @@ export const RTODashboard: React.FC = () => {
     console.log('Summary from data:', data.summary);
 
     setUploadedData(data);
+
+    // Clear localStorage cache when new data is uploaded
+    localStorage.removeItem('rto-upload-summary');
 
     // Reload the overall summary to get updated counts
     loadOverallUploadSummary();
@@ -587,12 +731,34 @@ export const RTODashboard: React.FC = () => {
         <TabsContent value="upload" className="space-y-6">
           <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg">
             <CardHeader className="pb-6">
-              <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
-                <div className="p-3 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl">
-                  <FileSpreadsheet className="h-6 w-6 text-blue-600" />
-                </div>
-                Upload Summary
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                  <div className="p-3 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl">
+                    <FileSpreadsheet className="h-6 w-6 text-blue-600" />
+                  </div>
+                  Upload Summary
+                </CardTitle>
+                <button
+                  onClick={() => loadOverallUploadSummary(0, true)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Refresh summary data"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
               <CardDescription className="text-gray-600 text-base">
                 {uploadedData
                   ? `Successfully uploaded ${
