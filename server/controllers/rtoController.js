@@ -918,6 +918,12 @@ const getOverallUploadSummary = async (req, res) => {
     const isProduction = process.env.NODE_ENV === 'production';
     const shouldBypassCache = bypassCache || isPM2 || isProduction;
 
+    // Clear cache entry if force=true is explicitly requested
+    if (bypassCache) {
+      dataCache.delete(cacheKey);
+      console.log('📊 Cleared cache due to force=true parameter');
+    }
+
     if (!shouldBypassCache) {
       const cachedSummary = dataCache.get(cacheKey);
       if (cachedSummary && Date.now() - cachedSummary.timestamp < CACHE_TTL) {

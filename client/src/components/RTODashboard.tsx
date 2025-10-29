@@ -61,24 +61,11 @@ export const RTODashboard: React.FC = () => {
   >([]);
   const [reportsRTOData, setReportsRTOData] = useState<any[]>([]);
   const [reportsCourierCounts, setReportsCourierCounts] = useState<any[]>([]);
-  const [uploadSummary, setUploadSummary] = useState(() => {
-    // Try to load from localStorage on initialization
-    const saved = localStorage.getItem('rto-upload-summary');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log('📊 Loaded summary from localStorage:', parsed);
-        return parsed;
-      } catch (error) {
-        console.warn('Failed to parse saved summary:', error);
-      }
-    }
-    return {
-      totalRecords: 0,
-      scanned: 0,
-      matched: 0,
-      unmatched: 0,
-    };
+  const [uploadSummary, setUploadSummary] = useState({
+    totalRecords: 0,
+    scanned: 0,
+    matched: 0,
+    unmatched: 0,
   });
   const loadingRef = useRef(false);
 
@@ -204,10 +191,15 @@ export const RTODashboard: React.FC = () => {
             retryCount + 1
           }, force: ${forceRefresh})`,
         );
-        const url = forceRefresh
-          ? `${API_ENDPOINTS.RTO.SUMMARY}?force=true`
-          : API_ENDPOINTS.RTO.SUMMARY;
-        const response = await fetch(url);
+        // Always use force=true to bypass cache, especially on VPS/production
+        const url = `${API_ENDPOINTS.RTO.SUMMARY}?force=true`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-cache',
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -220,40 +212,32 @@ export const RTODashboard: React.FC = () => {
             unmatched: data.unmatched || 0,
           };
 
-          // Only update if the data has actually changed
-          setUploadSummary((prevSummary) => {
-            const hasChanged =
-              prevSummary.totalRecords !== summary.totalRecords ||
-              prevSummary.scanned !== summary.scanned ||
-              prevSummary.matched !== summary.matched ||
-              prevSummary.unmatched !== summary.unmatched;
+          // Always update with fresh data from server
+          setUploadSummary(summary);
 
-            if (hasChanged) {
-              // Save to localStorage for persistence
-              localStorage.setItem(
-                'rto-upload-summary',
-                JSON.stringify(summary),
-              );
-              console.log('✅ Loaded overall upload summary:', summary);
-              return summary;
-            } else {
-              console.log('📊 Summary data unchanged, keeping existing data');
-              return prevSummary;
-            }
-          });
+          // Save to localStorage for persistence
+          localStorage.setItem('rto-upload-summary', JSON.stringify(summary));
+          console.log('✅ Loaded overall upload summary:', summary);
 
-          // Only retry if we got zeros AND there should be data (totalRecords > 0)
+          // Retry if we got zeros AND there should be data (totalRecords > 0)
+          // This helps with timing issues where data hasn't propagated yet
           if (
-            retryCount === 0 &&
+            retryCount < 2 &&
             summary.scanned === 0 &&
             summary.matched === 0 &&
             summary.unmatched === 0 &&
             summary.totalRecords > 0
           ) {
             console.log(
-              '⚠️ Got zeros on first attempt but totalRecords > 0, retrying...',
+              `⚠️ Got zeros on attempt ${
+                retryCount + 1
+              } but totalRecords > 0, retrying...`,
             );
-            setTimeout(() => loadOverallUploadSummary(1, true), 1000);
+            setTimeout(
+              () => loadOverallUploadSummary(retryCount + 1, true),
+              1500,
+            );
+            return; // Exit early to prevent duplicate updates
           }
         } else {
           console.error(
@@ -261,26 +245,69 @@ export const RTODashboard: React.FC = () => {
             response.status,
             response.statusText,
           );
-          if (retryCount === 0) {
-            console.log('🔄 Retrying summary fetch...');
-            setTimeout(() => loadOverallUploadSummary(1, true), 1000);
-          } else {
-            // If retry also failed, don't reset the existing data
-            console.warn(
-              '⚠️ Summary fetch failed after retry, keeping existing data',
+          if (retryCount < 2) {
+            console.log(
+              `🔄 Retrying summary fetch (attempt ${retryCount + 1})...`,
             );
+            setTimeout(
+              () => loadOverallUploadSummary(retryCount + 1, true),
+              1500,
+            );
+          } else {
+            // If retry also failed, try to load from localStorage as fallback
+            const saved = localStorage.getItem('rto-upload-summary');
+            if (saved) {
+              try {
+                const parsed = JSON.parse(saved);
+                console.log(
+                  '📊 Loading summary from localStorage fallback:',
+                  parsed,
+                );
+                setUploadSummary(parsed);
+              } catch (error) {
+                console.warn('⚠️ Failed to parse localStorage summary:', error);
+              }
+            } else {
+              console.warn(
+                '⚠️ Summary fetch failed after retries, no fallback data available',
+              );
+            }
           }
         }
       } catch (error) {
         console.error('❌ Error loading overall upload summary:', error);
-        if (retryCount === 0) {
-          console.log('🔄 Retrying summary fetch after error...');
-          setTimeout(() => loadOverallUploadSummary(1, true), 1000);
-        } else {
-          // If retry also failed, don't reset the existing data
-          console.warn(
-            '⚠️ Summary fetch failed after retry, keeping existing data',
+        if (retryCount < 2) {
+          console.log(
+            `🔄 Retrying summary fetch after error (attempt ${
+              retryCount + 1
+            })...`,
           );
+          setTimeout(
+            () => loadOverallUploadSummary(retryCount + 1, true),
+            1500,
+          );
+        } else {
+          // If retry also failed, try to load from localStorage as fallback
+          const saved = localStorage.getItem('rto-upload-summary');
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              console.log(
+                '📊 Loading summary from localStorage fallback:',
+                parsed,
+              );
+              setUploadSummary(parsed);
+            } catch (parseError) {
+              console.warn(
+                '⚠️ Failed to parse localStorage summary:',
+                parseError,
+              );
+            }
+          } else {
+            console.warn(
+              '⚠️ Summary fetch failed after retries, no fallback data available',
+            );
+          }
         }
       }
     },
@@ -457,29 +484,26 @@ export const RTODashboard: React.FC = () => {
     }
   }, []);
 
-  // Load overall upload summary on app startup
+  // Load overall upload summary on app startup - always force refresh
   useEffect(() => {
-    loadOverallUploadSummary();
+    // Always force refresh on mount to get fresh data from server
+    loadOverallUploadSummary(0, true);
   }, [loadOverallUploadSummary]);
 
   // Refresh summary when page becomes visible (handles refresh scenarios)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Only refresh if we don't have valid data
-        if (uploadSummary.totalRecords === 0) {
-          console.log('🔄 Page became visible, refreshing summary...');
-          loadOverallUploadSummary(0, true);
-        }
+        // Always refresh when page becomes visible to ensure fresh data
+        console.log('🔄 Page became visible, refreshing summary...');
+        loadOverallUploadSummary(0, true);
       }
     };
 
     const handleFocus = () => {
-      // Only refresh if we don't have valid data
-      if (uploadSummary.totalRecords === 0) {
-        console.log('🔄 Window focused, refreshing summary...');
-        loadOverallUploadSummary(0, true);
-      }
+      // Always refresh on focus to ensure fresh data, especially after tab refresh
+      console.log('🔄 Window focused, refreshing summary...');
+      loadOverallUploadSummary(0, true);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -489,7 +513,7 @@ export const RTODashboard: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [loadOverallUploadSummary, uploadSummary.totalRecords]);
+  }, [loadOverallUploadSummary]);
 
   // Load reports data when reports date changes
   useEffect(() => {
@@ -600,7 +624,7 @@ export const RTODashboard: React.FC = () => {
 
           // Also refresh overall summary
           try {
-            await loadOverallUploadSummary();
+            await loadOverallUploadSummary(0, true);
             console.log('✅ loadOverallUploadSummary completed');
           } catch (error) {
             console.error('❌ Error in loadOverallUploadSummary:', error);
@@ -646,8 +670,8 @@ export const RTODashboard: React.FC = () => {
     // Clear localStorage cache when new data is uploaded
     localStorage.removeItem('rto-upload-summary');
 
-    // Reload the overall summary to get updated counts
-    loadOverallUploadSummary();
+    // Reload the overall summary to get updated counts - always force refresh
+    loadOverallUploadSummary(0, true);
 
     // Refresh reports data if we're currently viewing reports
     if (reportsSelectedDate && !isNaN(reportsSelectedDate.getTime())) {
@@ -662,8 +686,8 @@ export const RTODashboard: React.FC = () => {
   const handleScanResult = (result: BarcodeResult) => {
     setScanResults((prev) => [result, ...prev]);
 
-    // Reload the overall summary to get updated counts
-    loadOverallUploadSummary();
+    // Reload the overall summary to get updated counts - always force refresh
+    loadOverallUploadSummary(0, true);
 
     // Refresh reports data if we're currently viewing reports
     if (reportsSelectedDate && !isNaN(reportsSelectedDate.getTime())) {
