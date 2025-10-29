@@ -23,4 +23,12 @@ export default defineConfig(({ mode }) => ({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['date-fns'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/date-fns/, /node_modules/],
+    },
+  },
 }));
