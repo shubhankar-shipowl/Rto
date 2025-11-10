@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
+const { requireAdmin } = require('../middleware/auth');
 const {
   uploadRTOData,
   scanBarcode,
@@ -67,16 +68,16 @@ router.get('/summary', getOverallUploadSummary);
 // Get all uploaded data
 router.get('/uploads', getAllUploadedData);
 
-// Delete uploaded data by date
-router.delete('/uploads/:date', deleteUploadedData);
+// Delete uploaded data by date (Admin only)
+router.delete('/uploads/:date', requireAdmin, deleteUploadedData);
 
-// Delete all uploaded data
-router.delete('/uploads', deleteAllUploadedData);
+// Delete all uploaded data (Admin only)
+router.delete('/uploads', requireAdmin, deleteAllUploadedData);
 
 // Get courier counts for specific date
 router.get('/courier-counts/:date', getCourierCounts);
 
-// Delete unmatched scan result
-router.delete('/scan/unmatched', deleteUnmatchedScan);
+// Delete unmatched scan result (Admin only)
+router.delete('/scan/unmatched', requireAdmin, deleteUnmatchedScan);
 
 module.exports = router;

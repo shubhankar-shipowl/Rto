@@ -39,7 +39,8 @@ import {
   ChevronRight,
   Trash2,
 } from 'lucide-react';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Complaint {
   id: string;
@@ -55,6 +56,8 @@ interface Complaint {
 }
 
 const ComplaintManagement: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -256,13 +259,14 @@ const ComplaintManagement: React.FC = () => {
       setActionLoading(true);
       const response = await fetch(API_ENDPOINTS.COMPLAINTS.DELETE_ALL, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          throw new Error('Access denied: Admin privileges required');
+        }
         throw new Error(errorData.error || 'Failed to delete all complaints');
       }
 
@@ -302,7 +306,7 @@ const ComplaintManagement: React.FC = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              {complaints.length > 0 && (
+              {complaints.length > 0 && isAdmin && (
                 <Button
                   onClick={() => setDeleteAllDialog(true)}
                   variant="destructive"

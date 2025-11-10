@@ -11,7 +11,8 @@ import { RTOUpload } from './RTOUpload';
 import { BarcodeScanner } from './BarcodeScanner';
 import { ReportTable } from './ReportTable';
 import ComplaintManagement from './ComplaintManagement';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Upload,
   Scan,
@@ -39,6 +40,8 @@ interface BarcodeResult {
 }
 
 export const RTODashboard: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [scanResults, setScanResults] = useState<BarcodeResult[]>([]);
   const [uploadedData, setUploadedData] = useState<any>(null);
@@ -589,9 +592,7 @@ export const RTODashboard: React.FC = () => {
 
         const response = await fetch(API_ENDPOINTS.RTO.DELETE_UNMATCHED_SCAN, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             barcode: barcode,
             date: dateString,
@@ -630,13 +631,17 @@ export const RTODashboard: React.FC = () => {
             console.error('❌ Error in loadOverallUploadSummary:', error);
           }
         } else {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({}));
           console.error('❌ Failed to delete unmatched scan:', errorData);
-          alert(
-            `Failed to delete unmatched scan: ${
-              errorData.message || 'Unknown error'
-            }`,
-          );
+          if (response.status === 403) {
+            alert('Access denied: Admin privileges required to delete unmatched scans');
+          } else {
+            alert(
+              `Failed to delete unmatched scan: ${
+                errorData.error || errorData.message || 'Unknown error'
+              }`,
+            );
+          }
         }
       } catch (error) {
         console.error('❌ Error deleting unmatched scan:', error);
@@ -1106,6 +1111,7 @@ export const RTODashboard: React.FC = () => {
                     courierCounts={reportsCourierCounts}
                     rtoData={reportsRTOData}
                     onDeleteUnmatched={handleDeleteUnmatched}
+                    isAdmin={isAdmin}
                   />
                 </>
               );

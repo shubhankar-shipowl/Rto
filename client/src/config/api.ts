@@ -44,6 +44,27 @@ export const getApiUrl = (endpoint: string): string => {
   return `${API_BASE_URL}${endpoint}`;
 };
 
+// Helper function to get auth headers with user role
+export const getAuthHeaders = (): Record<string, string> => {
+  const savedUser = localStorage.getItem('rto_user');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (savedUser) {
+    try {
+      const user = JSON.parse(savedUser);
+      if (user.role) {
+        headers['x-user-role'] = user.role;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+  }
+
+  return headers;
+};
+
 // Debug function to log current API configuration
 export const logApiConfig = (): void => {
   console.log('API Configuration:', {

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { requireAdmin } = require('../middleware/auth');
 const {
   createComplaint,
   getComplaintsByDate,
@@ -29,10 +30,10 @@ router.get('/', getAllComplaints);
 // Get complaint statistics
 router.get('/stats', getComplaintStats);
 
-// Delete complaint by barcode
-router.delete('/barcode/:barcode', deleteComplaintByBarcode);
+// Delete complaint by barcode (Admin only)
+router.delete('/barcode/:barcode', requireAdmin, deleteComplaintByBarcode);
 
-// Delete all complaints
-router.delete('/all', deleteAllComplaints);
+// Delete all complaints (Admin only)
+router.delete('/all', requireAdmin, deleteAllComplaints);
 
 module.exports = router;

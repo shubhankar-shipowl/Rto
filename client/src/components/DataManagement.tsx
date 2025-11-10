@@ -10,7 +10,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Trash2, Database, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface UploadedData {
   id: number;
@@ -30,6 +31,8 @@ interface DataManagementProps {
 export const DataManagement: React.FC<DataManagementProps> = ({
   onDataDeleted,
 }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -65,6 +68,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
     try {
       const response = await fetch(API_ENDPOINTS.RTO.DELETE_UPLOAD(date), {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -72,7 +76,12 @@ export const DataManagement: React.FC<DataManagementProps> = ({
         await loadUploadedData();
         onDataDeleted();
       } else {
-        toast.error('Failed to delete data');
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          toast.error('Access denied: Admin privileges required');
+        } else {
+          toast.error(errorData.error || 'Failed to delete data');
+        }
       }
     } catch (error) {
       console.error('Error deleting data:', error);
@@ -95,6 +104,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
     try {
       const response = await fetch(API_ENDPOINTS.RTO.DELETE_ALL_UPLOADS, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -102,7 +112,12 @@ export const DataManagement: React.FC<DataManagementProps> = ({
         await loadUploadedData();
         onDataDeleted();
       } else {
-        toast.error('Failed to delete all data');
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          toast.error('Access denied: Admin privileges required');
+        } else {
+          toast.error(errorData.error || 'Failed to delete all data');
+        }
       }
     } catch (error) {
       console.error('Error deleting all data:', error);
@@ -168,28 +183,30 @@ export const DataManagement: React.FC<DataManagementProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Delete All Button */}
-            <div className="flex justify-end mb-6">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                disabled={deleting === 'all'}
-                onClick={deleteAllData}
-              >
-                {deleting === 'all' ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    Deleting...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Delete All Data
-                  </div>
-                )}
-              </Button>
-            </div>
+            {/* Delete All Button - Admin only */}
+            {isAdmin && (
+              <div className="flex justify-end mb-6">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                  disabled={deleting === 'all'}
+                  onClick={deleteAllData}
+                >
+                  {deleting === 'all' ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Deleting...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Trash2 className="h-4 w-4" />
+                      Delete All Data
+                    </div>
+                  )}
+                </Button>
+              </div>
+            )}
 
             {/* Data List */}
             <div className="space-y-3">
@@ -226,25 +243,27 @@ export const DataManagement: React.FC<DataManagementProps> = ({
                     >
                       Active
                     </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                      disabled={deleting === data.date}
-                      onClick={() => deleteDataByDate(data.date)}
-                    >
-                      {deleting === data.date ? (
-                        <div className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
-                          Deleting...
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </div>
-                      )}
-                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                        disabled={deleting === data.date}
+                        onClick={() => deleteDataByDate(data.date)}
+                      >
+                        {deleting === data.date ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                            Deleting...
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </div>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

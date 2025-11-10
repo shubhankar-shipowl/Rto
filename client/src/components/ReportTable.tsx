@@ -60,6 +60,7 @@ interface ReportTableProps {
   courierCounts?: any[];
   rtoData?: any[];
   onDeleteUnmatched?: (barcode: string) => void;
+  isAdmin?: boolean;
 }
 
 interface ComplaintDialogState {
@@ -137,6 +138,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   courierCounts = [],
   rtoData = [],
   onDeleteUnmatched,
+  isAdmin = false,
 }) => {
   // State
   const [complaintDialog, setComplaintDialog] = useState<ComplaintDialogState>({
@@ -714,45 +716,49 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                     {formatTimestamp(item.timestamp)}
                   </TableCell>
                   <TableCell>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 icon-align"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Delete Unmatched Item
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this unmatched scan
-                            result?
-                            <br />
-                            <strong>Barcode:</strong> {item.barcode}
-                            <br />
-                            <strong>Time:</strong>{' '}
-                            {formatTimestamp(item.timestamp)}
-                            <br />
-                            <br />
-                            This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => onDeleteUnmatched?.(item.barcode)}
-                            className="bg-red-600 hover:bg-red-700"
+                    {isAdmin && onDeleteUnmatched ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 icon-align"
                           >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Delete Unmatched Item
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this unmatched scan
+                              result?
+                              <br />
+                              <strong>Barcode:</strong> {item.barcode}
+                              <br />
+                              <strong>Time:</strong>{' '}
+                              {formatTimestamp(item.timestamp)}
+                              <br />
+                              <br />
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDeleteUnmatched?.(item.barcode)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
