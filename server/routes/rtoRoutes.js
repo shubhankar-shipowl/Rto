@@ -15,6 +15,8 @@ const {
   deleteAllUploadedData,
   getCourierCounts,
   deleteUnmatchedScan,
+  reconcileUnmatchedScan,
+  getReconcilableScans,
 } = require('../controllers/rtoController');
 
 // Upload RTO Excel file
@@ -79,5 +81,11 @@ router.get('/courier-counts/:date', getCourierCounts);
 
 // Delete unmatched scan result (Admin only)
 router.delete('/scan/unmatched', requireAdmin, deleteUnmatchedScan);
+
+// Reconcile unmatched scan to matched (move to correct date)
+router.post('/scan/reconcile', reconcileUnmatchedScan);
+
+// Get reconcilable unmatched scans for a date
+router.get('/reconcilable/:date', getReconcilableScans);
 
 module.exports = router;

@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Search,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -37,6 +38,8 @@ import {
   AlertDialogTrigger,
 } from './ui/alert-dialog';
 import ComplaintDialog from './ComplaintDialog';
+import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
+import { toast } from 'sonner';
 
 // Types
 interface BarcodeResult {
@@ -150,6 +153,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     new Set(),
   );
   const [complaintsLoaded, setComplaintsLoaded] = useState(false);
+  const [reconcilableScans, setReconcilableScans] = useState<any[]>([]);
+  const [reconcilingScanId, setReconcilingScanId] = useState<number | null>(
+    null,
+  );
 
   // Search state
   const [matchedSearchTerm, setMatchedSearchTerm] = useState('');
@@ -277,6 +284,57 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     [itemsWithComplaints],
   );
 
+  // Load reconcilable scans
+  const loadReconcilableScans = useCallback(async () => {
+    if (!selectedDate) return;
+
+    try {
+      const dateString = selectedDate.toISOString().split('T')[0];
+      const response = await fetch(API_ENDPOINTS.RTO.RECONCILABLE_SCANS(dateString));
+      if (response.ok) {
+        const data = await response.json();
+        setReconcilableScans(data);
+      }
+    } catch (error) {
+      console.error('Error loading reconcilable scans:', error);
+    }
+  }, [selectedDate]);
+
+  // Handle reconciliation
+  const handleReconcile = useCallback(
+    async (scanId: number, targetDate: string) => {
+      setReconcilingScanId(scanId);
+      try {
+        const response = await fetch(API_ENDPOINTS.RTO.RECONCILE_SCAN, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ scanId, targetDate }),
+        });
+
+        if (response.ok) {
+          toast.success('Scan moved to matched successfully');
+          // Reload data by calling onDeleteUnmatched callback to refresh
+          // The parent component should refresh the data
+          if (onDeleteUnmatched) {
+            // Trigger a refresh by reloading reconcilable scans
+            await loadReconcilableScans();
+          }
+          // Reload page data
+          window.location.reload();
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          toast.error(errorData.error || 'Failed to reconcile scan');
+        }
+      } catch (error) {
+        console.error('Error reconciling scan:', error);
+        toast.error('Failed to reconcile scan');
+      } finally {
+        setReconcilingScanId(null);
+      }
+    },
+    [onDeleteUnmatched, loadReconcilableScans],
+  );
+
   // Load complaints
   const loadComplaints = useCallback(async () => {
     try {
@@ -298,6 +356,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   useEffect(() => {
     loadComplaints();
   }, [loadComplaints, selectedDate, data]);
+
+  useEffect(() => {
+    loadReconcilableScans();
+  }, [loadReconcilableScans]);
 
   // CSV export function
   const exportToCSV = useCallback(() => {
@@ -700,14 +762,23 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {item.isFromDifferentDate ? (
-                      <Badge
-                        variant="outline"
-                        size="sm"
-                        className="text-orange-600 border-orange-300 bg-orange-50 status-badge"
-                      >
-                        From {item.originalDate}
-                      </Badge>
+                    {item.isFromDifferentDate && item.originalDate ? (
+                      <div className="flex flex-col gap-1">
+                        <Badge
+                          variant="outline"
+                          size="sm"
+                          className="text-orange-600 border-orange-300 bg-orange-50 status-badge w-fit"
+                        >
+                          Correct Date: {item.originalDate}
+                        </Badge>
+                        {item.message && (
+                          <span className="text-xs text-gray-600 italic">
+                            {item.message}
+                          </span>
+                        )}
+                      </div>
+                    ) : item.message && item.message !== 'Barcode not found in RTO data' ? (
+                      <span className="text-xs text-gray-600">{item.message}</span>
                     ) : (
                       <span className="text-gray-500">-</span>
                     )}
@@ -716,49 +787,93 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                     {formatTimestamp(item.timestamp)}
                   </TableCell>
                   <TableCell>
-                    {isAdmin && onDeleteUnmatched ? (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 icon-align"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Delete Unmatched Item
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this unmatched scan
-                              result?
-                              <br />
-                              <strong>Barcode:</strong> {item.barcode}
-                              <br />
-                              <strong>Time:</strong>{' '}
-                              {formatTimestamp(item.timestamp)}
-                              <br />
-                              <br />
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDeleteUnmatched?.(item.barcode)}
-                              className="bg-red-600 hover:bg-red-700"
+                    <div className="flex items-center gap-2">
+                      {/* Move to Matched button for reconcilable scans */}
+                      {(() => {
+                        const reconcilableScan = reconcilableScans.find(
+                          (rs) =>
+                            rs.scanId === (item as any).id ||
+                            rs.barcode === item.barcode,
+                        );
+                        if (reconcilableScan) {
+                          return (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300"
+                              disabled={reconcilingScanId === reconcilableScan.scanId}
+                              onClick={() =>
+                                handleReconcile(
+                                  reconcilableScan.scanId,
+                                  reconcilableScan.targetDate,
+                                )
+                              }
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    ) : (
-                      <span className="text-gray-400 text-sm">-</span>
-                    )}
+                              {reconcilingScanId === reconcilableScan.scanId ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-green-600 border-t-transparent"></div>
+                                  Moving...
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <ArrowRight className="h-3 w-3" />
+                                  Move to {reconcilableScan.targetDate}
+                                </div>
+                              )}
+                            </Button>
+                          );
+                        }
+                        return null;
+                      })()}
+                      {/* Delete button for admin */}
+                      {isAdmin && onDeleteUnmatched && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 icon-align"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Delete Unmatched Item
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this unmatched scan
+                                result?
+                                <br />
+                                <strong>Barcode:</strong> {item.barcode}
+                                <br />
+                                <strong>Time:</strong>{' '}
+                                {formatTimestamp(item.timestamp)}
+                                <br />
+                                <br />
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => onDeleteUnmatched?.(item.barcode)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      {!isAdmin &&
+                        !reconcilableScans.find(
+                          (rs) =>
+                            rs.scanId === (item as any).id ||
+                            rs.barcode === item.barcode,
+                        ) && <span className="text-gray-400 text-sm">-</span>}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

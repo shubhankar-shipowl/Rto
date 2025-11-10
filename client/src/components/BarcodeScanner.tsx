@@ -40,6 +40,8 @@ interface BarcodeResult {
   price?: number;
   message: string;
   alreadyScanned?: boolean;
+  isFromDifferentDate?: boolean;
+  originalDate?: string;
   previousScan?: {
     timestamp: string;
     status: string;
@@ -484,7 +486,9 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           productName: data.productName,
           quantity: data.quantity,
           price: data.price,
-          message: data.match ? 'Matched successfully' : 'No match found',
+          message: data.message || (data.match ? 'Matched successfully' : 'No match found'),
+          isFromDifferentDate: data.isFromDifferentDate,
+          originalDate: data.originalDate,
         };
         setScanResults((prev) => [newResult, ...prev]);
         onScanResult(newResult);
@@ -928,6 +932,11 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                       >
                         {result.message}
                       </p>
+                      {result.isFromDifferentDate && result.originalDate && (
+                        <p className="text-xs text-orange-600 font-semibold mt-1">
+                          ⚠️ This barcode belongs to date: {result.originalDate}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(result.timestamp).toLocaleTimeString()}
                       </p>

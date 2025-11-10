@@ -309,6 +309,55 @@ const uploadRTOData = async (req, res) => {
 
     console.log('✅ Upload completed successfully');
 
+    // Check for reconcilable unmatched scans
+    const reconcilableScans = [];
+    try {
+      for (const [rtsDate, products] of Object.entries(productsByDate)) {
+        // Get all barcodes for this date
+        const barcodeSet = new Set(
+          products.map((p) => p.barcode.toString().toLowerCase()),
+        );
+
+        // Find unmatched scans from other dates that match these barcodes
+        const unmatchedScans = await ScanResult.findAll({
+          where: {
+            match: false,
+            date: { [Op.ne]: rtsDate }, // From different dates
+          },
+        });
+
+        for (const scan of unmatchedScans) {
+          if (
+            barcodeSet.has(scan.barcode.toString().toLowerCase()) &&
+            products.find(
+              (p) =>
+                p.barcode.toString().toLowerCase() ===
+                scan.barcode.toString().toLowerCase(),
+            )
+          ) {
+            const matchedProduct = products.find(
+              (p) =>
+                p.barcode.toString().toLowerCase() ===
+                scan.barcode.toString().toLowerCase(),
+            );
+            reconcilableScans.push({
+              scanId: scan.id,
+              barcode: scan.barcode,
+              scannedDate: scan.date,
+              targetDate: rtsDate,
+              productName: matchedProduct.productName,
+              quantity: matchedProduct.quantity,
+              price: matchedProduct.price,
+              scannedTimestamp: scan.timestamp,
+            });
+          }
+        }
+      }
+    } catch (reconcileError) {
+      console.error('Error checking for reconcilable scans:', reconcileError);
+      // Don't fail the upload if reconciliation check fails
+    }
+
     // Clear overall summary cache since new data was uploaded
     clearOverallSummaryCache();
 
@@ -318,6 +367,7 @@ const uploadRTOData = async (req, res) => {
       totalRecords: totalWaybills, // Use unique waybill count
       totalProducts: totalProducts, // Keep product count for reference
       uploadResults: uploadResults,
+      reconcilableScans: reconcilableScans, // Scans that can be moved to matched
       summary: {
         totalDates: Object.keys(productsByDate).length,
         totalWaybills: totalWaybills,
@@ -595,6 +645,51 @@ const scanBarcode = async (req, res) => {
         throw error;
       }
     } else {
+      // Barcode not found in current date - check other dates
+      let foundInOtherDate = null;
+      let correctDate = null;
+      let productInfo = null;
+
+      // Search in all other dates' RTO data
+      const allRTOData = await RTOData.findAll({
+        where: {
+          date: { [Op.ne]: date }, // Exclude current date
+        },
+        attributes: ['date', 'barcodes'],
+      });
+
+      for (const otherRtoData of allRTOData) {
+        let otherBarcodes = otherRtoData.barcodes || [];
+        if (typeof otherBarcodes === 'string') {
+          try {
+            otherBarcodes = JSON.parse(otherBarcodes);
+          } catch (error) {
+            continue;
+          }
+        }
+
+        if (!Array.isArray(otherBarcodes)) {
+          continue;
+        }
+
+        const matchedProduct = otherBarcodes.find(
+          (item) =>
+            item.barcode.toString().toLowerCase() ===
+            barcode.toString().toLowerCase(),
+        );
+
+        if (matchedProduct) {
+          foundInOtherDate = true;
+          correctDate = otherRtoData.date;
+          productInfo = {
+            productName: matchedProduct.productName,
+            quantity: matchedProduct.quantity,
+            price: matchedProduct.price,
+          };
+          break; // Found it, no need to check other dates
+        }
+      }
+
       // Handle unmatched barcode - don't add to barcodes array, just create scan result
       let summary = rtoData.reconciliationSummary || {
         totalScanned: 0,
@@ -613,6 +708,12 @@ const scanBarcode = async (req, res) => {
       }
       summary.totalScanned += 1;
       summary.unmatched += 1;
+
+      // Prepare message based on whether barcode was found in another date
+      let message = 'Barcode not found in RTO data';
+      if (foundInOtherDate && correctDate) {
+        message = `Barcode belongs to date ${correctDate}. Please scan on the correct date.`;
+      }
 
       // Use transaction for atomic updates
       const transaction = await sequelize.transaction();
@@ -634,11 +735,13 @@ const scanBarcode = async (req, res) => {
               barcode: barcode,
               date: date,
               match: false,
-              productName: 'Unknown Product',
-              quantity: 1,
-              price: 0,
-              message: 'Barcode not found in RTO data',
+              productName: productInfo?.productName || 'Unknown Product',
+              quantity: productInfo?.quantity || 1,
+              price: productInfo?.price || 0,
+              message: message,
               timestamp: new Date(),
+              isFromDifferentDate: foundInOtherDate || false,
+              originalDate: correctDate || null,
             },
             { transaction },
           ),
@@ -661,11 +764,13 @@ const scanBarcode = async (req, res) => {
         res.json({
           match: false,
           barcode: barcode,
-          productName: 'Unknown Product',
-          quantity: 1,
-          price: 0,
-          message: 'Barcode not found in RTO data',
+          productName: productInfo?.productName || 'Unknown Product',
+          quantity: productInfo?.quantity || 1,
+          price: productInfo?.price || 0,
+          message: message,
           timestamp: new Date(),
+          isFromDifferentDate: foundInOtherDate || false,
+          originalDate: correctDate || null,
         });
       } catch (error) {
         await transaction.rollback();
@@ -1264,6 +1369,287 @@ const deleteUnmatchedScan = async (req, res) => {
   }
 };
 
+// Get reconcilable unmatched scans (scans that exist in other dates' RTO data)
+const getReconcilableScans = async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    if (!date) {
+      return res.status(400).json({ error: 'Date is required' });
+    }
+
+    // Get all unmatched scans for this date
+    const unmatchedScans = await ScanResult.findAll({
+      where: {
+        date: date,
+        match: false,
+      },
+      attributes: ['id', 'barcode', 'date', 'timestamp'],
+    });
+
+    // Get all RTO data (excluding current date)
+    const allRTOData = await RTOData.findAll({
+      where: {
+        date: { [Op.ne]: date },
+      },
+      attributes: ['date', 'barcodes'],
+    });
+
+    const reconcilableScans = [];
+
+    for (const scan of unmatchedScans) {
+      for (const rtoData of allRTOData) {
+        let barcodes = rtoData.barcodes || [];
+        if (typeof barcodes === 'string') {
+          try {
+            barcodes = JSON.parse(barcodes);
+          } catch (error) {
+            continue;
+          }
+        }
+
+        if (!Array.isArray(barcodes)) {
+          continue;
+        }
+
+        const matchedProduct = barcodes.find(
+          (item) =>
+            item.barcode.toString().toLowerCase() ===
+            scan.barcode.toString().toLowerCase(),
+        );
+
+        if (matchedProduct) {
+          reconcilableScans.push({
+            scanId: scan.id,
+            barcode: scan.barcode,
+            scannedDate: scan.date,
+            targetDate: rtoData.date,
+            productName: matchedProduct.productName,
+            quantity: matchedProduct.quantity,
+            price: matchedProduct.price,
+            scannedTimestamp: scan.timestamp,
+          });
+          break; // Found a match, no need to check other dates
+        }
+      }
+    }
+
+    res.json(reconcilableScans);
+  } catch (error) {
+    console.error('Error getting reconcilable scans:', error);
+    res.status(500).json({
+      error: 'Failed to get reconcilable scans',
+      details: error.message,
+    });
+  }
+};
+
+// Reconcile unmatched scan to matched when its date's data is uploaded
+const reconcileUnmatchedScan = async (req, res) => {
+  try {
+    const { scanId, targetDate } = req.body;
+
+    if (!scanId || !targetDate) {
+      return res.status(400).json({
+        error: 'Scan ID and target date are required',
+      });
+    }
+
+    // Find the unmatched scan
+    const unmatchedScan = await ScanResult.findOne({
+      where: {
+        id: scanId,
+        match: false,
+      },
+    });
+
+    if (!unmatchedScan) {
+      return res.status(404).json({
+        error: 'Unmatched scan not found',
+      });
+    }
+
+    // Get RTO data for target date
+    const rtoData = await RTOData.findOne({
+      where: { date: targetDate },
+    });
+
+    if (!rtoData) {
+      return res.status(404).json({
+        error: `No RTO data found for date ${targetDate}`,
+      });
+    }
+
+    // Parse barcodes
+    let barcodes = rtoData.barcodes || [];
+    if (typeof barcodes === 'string') {
+      try {
+        barcodes = JSON.parse(barcodes);
+      } catch (error) {
+        console.error('Error parsing barcodes:', error);
+        barcodes = [];
+      }
+    }
+
+    if (!Array.isArray(barcodes)) {
+      barcodes = [];
+    }
+
+    // Find matching product
+    const matchedProduct = barcodes.find(
+      (item) =>
+        item.barcode.toString().toLowerCase() ===
+        unmatchedScan.barcode.toString().toLowerCase(),
+    );
+
+    if (!matchedProduct) {
+      return res.status(404).json({
+        error: 'Barcode not found in target date data',
+      });
+    }
+
+    // Use transaction for atomic operations
+    const transaction = await sequelize.transaction();
+
+    try {
+      // Update product status in RTO data
+      const productIndex = barcodes.findIndex(
+        (item) =>
+          item.barcode.toString().toLowerCase() ===
+          unmatchedScan.barcode.toString().toLowerCase(),
+      );
+
+      if (productIndex !== -1) {
+        barcodes[productIndex].status = 'matched';
+        barcodes[productIndex].scannedAt = new Date();
+      }
+
+      // Update reconciliation summary for target date
+      let targetSummary = rtoData.reconciliationSummary || {
+        totalScanned: 0,
+        matched: 0,
+        unmatched: 0,
+      };
+
+      if (typeof targetSummary === 'string') {
+        try {
+          targetSummary = JSON.parse(targetSummary);
+        } catch (error) {
+          targetSummary = { totalScanned: 0, matched: 0, unmatched: 0 };
+        }
+      }
+
+      targetSummary.totalScanned += 1;
+      targetSummary.matched += 1;
+
+      // Update reconciliation summary for original date
+      const originalRtoData = await RTOData.findOne({
+        where: { date: unmatchedScan.date },
+        transaction,
+      });
+
+      let originalSummary = {
+        totalScanned: 0,
+        matched: 0,
+        unmatched: 0,
+      };
+
+      if (originalRtoData) {
+        originalSummary = originalRtoData.reconciliationSummary || {
+          totalScanned: 0,
+          matched: 0,
+          unmatched: 0,
+        };
+
+        if (typeof originalSummary === 'string') {
+          try {
+            originalSummary = JSON.parse(originalSummary);
+          } catch (error) {
+            originalSummary = { totalScanned: 0, matched: 0, unmatched: 0 };
+          }
+        }
+
+        originalSummary.totalScanned = Math.max(0, originalSummary.totalScanned - 1);
+        originalSummary.unmatched = Math.max(0, originalSummary.unmatched - 1);
+      }
+
+      // Delete the unmatched scan
+      await ScanResult.destroy({
+        where: { id: scanId },
+        transaction,
+      });
+
+      // Create new matched scan for target date
+      await ScanResult.create(
+        {
+          barcode: unmatchedScan.barcode,
+          date: targetDate,
+          match: true,
+          productName: matchedProduct.productName,
+          quantity: matchedProduct.quantity,
+          price: matchedProduct.price,
+          message: `Reconciled from ${unmatchedScan.date}`,
+          timestamp: unmatchedScan.timestamp, // Keep original scan timestamp
+          isFromDifferentDate: true,
+          originalDate: unmatchedScan.date,
+        },
+        { transaction },
+      );
+
+      // Update RTO data for target date
+      await RTOData.update(
+        {
+          barcodes: barcodes,
+          reconciliationSummary: targetSummary,
+        },
+        {
+          where: { id: rtoData.id },
+          transaction,
+        },
+      );
+
+      // Update RTO data for original date if it exists
+      if (originalRtoData) {
+        await RTOData.update(
+          {
+            reconciliationSummary: originalSummary,
+          },
+          {
+            where: { id: originalRtoData.id },
+            transaction,
+          },
+        );
+      }
+
+      await transaction.commit();
+
+      // Clear cache
+      clearCacheForDate(targetDate);
+      clearCacheForDate(unmatchedScan.date);
+      clearOverallSummaryCache();
+
+      res.json({
+        message: 'Unmatched scan reconciled successfully',
+        scan: {
+          barcode: unmatchedScan.barcode,
+          originalDate: unmatchedScan.date,
+          targetDate: targetDate,
+          productName: matchedProduct.productName,
+        },
+      });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error reconciling unmatched scan:', error);
+    res.status(500).json({
+      error: 'Failed to reconcile unmatched scan',
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   uploadRTOData,
   scanBarcode,
@@ -1277,4 +1663,6 @@ module.exports = {
   deleteAllUploadedData,
   getCourierCounts,
   deleteUnmatchedScan,
+  reconcileUnmatchedScan,
+  getReconcilableScans,
 };
