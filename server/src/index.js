@@ -16,8 +16,8 @@ const complaintRoutes = require('../routes/complaintRoutes');
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-// Connect to database
-connectDB();
+// Connect to database before starting server
+let dbConnected = false;
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
@@ -55,8 +55,24 @@ app.get('/', (req, res) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    const { sequelize } = require('./database');
+    await sequelize.authenticate();
+    res.json({ 
+      status: 'OK', 
+      database: 'connected',
+      timestamp: new Date().toISOString() 
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'ERROR', 
+      database: 'disconnected',
+      error: error.message,
+      timestamp: new Date().toISOString() 
+    });
+  }
 });
 
 // API routes
@@ -64,9 +80,46 @@ app.use('/api/auth', authRoutes);
 app.use('/api/rto', rtoRoutes);
 app.use('/api/complaints', complaintRoutes);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Start server only after database connection
+async function startServer() {
+  const maxRetries = 5;
+  let retryCount = 0;
+  
+  async function attemptConnection() {
+    try {
+      await connectDB();
+      dbConnected = true;
+      console.log("✅ Database connection established");
+      
+      app.listen(PORT, () => {
+        console.log(`✅ Server is running on port ${PORT}`);
+        console.log(`✅ Backend API: http://localhost:${PORT}`);
+      });
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Database connection attempt ${retryCount}/${maxRetries} failed:`, error.message);
+      
+      if (retryCount < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff, max 30s
+        console.log(`⏳ Retrying database connection in ${delay/1000}s...`);
+        setTimeout(attemptConnection, delay);
+      } else {
+        console.error("❌ Max retries reached. Starting server without database connection.");
+        console.error("⚠️  Server will retry connection on next request...");
+        // Don't exit - let PM2 handle restarts
+        // Start server anyway so health check can respond
+        app.listen(PORT, () => {
+          console.log(`⚠️  Server started on port ${PORT} but database connection failed`);
+          console.log(`⚠️  API endpoints may not work until database is connected`);
+          console.log(`⚠️  Check PM2 logs for details: pm2 logs rto-application`);
+        });
+      }
+    }
+  }
+  
+  attemptConnection();
+}
+
+startServer();
 
 module.exports = app;

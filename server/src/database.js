@@ -115,8 +115,11 @@ const connectDB = async () => {
 
     return sequelize;
   } catch (error) {
-    console.error("Database connection error:", error);
-    process.exit(1);
+    console.error("Database connection error:", error.message);
+    console.error("Full error:", error);
+    // Don't exit process - let the server start and retry
+    // PM2 will handle restarts if needed
+    throw error;
   }
 };
 
