@@ -89,8 +89,8 @@ const TABLE_CONFIGS = {
     headers: ['Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
   },
   unscanned: {
-    columns: 5,
-    headers: ['Courier Name', 'Barcode', 'Product', 'Qty', 'Price'],
+    columns: 6,
+    headers: ['Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
   },
   unmatched: {
     columns: 6,
@@ -254,27 +254,36 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     });
   }, []);
 
-  const handleComplaintCreated = useCallback((complaint: any) => {
-    if (complaint.barcode) {
-      setItemsWithComplaints((prev) => new Set(prev).add(complaint.barcode));
+  const handleComplaintCreated = useCallback(
+    async (complaint: any) => {
+      if (complaint.barcode) {
+        // Immediately add to the set for instant UI update
+        setItemsWithComplaints((prev) => new Set(prev).add(complaint.barcode));
 
-      // Reload complaints from server for consistency
-      setTimeout(async () => {
+        // Reload all complaints from server for consistency
+        // This ensures the status persists across page refreshes
         try {
-          const response = await fetch('/api/complaints');
+          const response = await fetch(
+            `${API_ENDPOINTS.COMPLAINTS.ALL}?limit=10000`,
+          );
           if (response.ok) {
             const data = await response.json();
+            const complaints = Array.isArray(data) ? data : data.complaints || [];
             const complaintBarcodes = new Set(
-              data.complaints.map((c: any) => c.barcode),
+              complaints.map((c: any) => c.barcode),
             );
             setItemsWithComplaints(complaintBarcodes);
+            console.log(
+              `✅ Reloaded ${complaints.length} complaints after creation`,
+            );
           }
         } catch (error) {
           console.error('Error reloading complaints:', error);
         }
-      }, 500);
-    }
-  }, []);
+      }
+    },
+    [],
+  );
 
   // Check if complaint exists for barcode
   const hasComplaint = useCallback(
@@ -335,17 +344,29 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     [onDeleteUnmatched, loadReconcilableScans],
   );
 
-  // Load complaints
+  // Load all complaints to check by barcode (not just selected date)
+  // This ensures "Reported" status persists across different dates and page refreshes
   const loadComplaints = useCallback(async () => {
     try {
-      const response = await fetch('/api/complaints');
+      // Fetch all complaints with a high limit to get all barcodes
+      const response = await fetch(
+        `${API_ENDPOINTS.COMPLAINTS.ALL}?limit=10000`,
+      );
       if (response.ok) {
         const data = await response.json();
+        // Get all complaints (could be an array or object with complaints property)
+        const complaints = Array.isArray(data) ? data : data.complaints || [];
+        // Create a Set of barcodes that have complaints (across all dates)
         const complaintBarcodes = new Set(
-          data.complaints.map((complaint: any) => complaint.barcode),
+          complaints.map((complaint: any) => complaint.barcode),
         );
         setItemsWithComplaints(complaintBarcodes);
         setComplaintsLoaded(true);
+        console.log(
+          `✅ Loaded ${complaints.length} complaints, ${complaintBarcodes.size} unique barcodes`,
+        );
+      } else {
+        console.error('Failed to load complaints:', response.statusText);
       }
     } catch (error) {
       console.error('Error loading complaints:', error);
@@ -691,6 +712,9 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                   </TableCell>
                   <TableCell className="text-center">
                     {formatPrice(item.price)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {renderActionButton(item)}
                   </TableCell>
                 </TableRow>
               ))}

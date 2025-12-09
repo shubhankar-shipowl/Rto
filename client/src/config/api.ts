@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
   },
   COMPLAINTS: {
     ALL: `${API_BASE_URL}/api/complaints`,
+    BY_DATE: (date: string) => `${API_BASE_URL}/api/complaints/date/${date}`,
     DELETE_ALL: `${API_BASE_URL}/api/complaints/all`,
     STATUS: (id: string) => `${API_BASE_URL}/api/complaints/${id}/status`,
     MAIL_DONE: (id: string) => `${API_BASE_URL}/api/complaints/${id}/mail-done`,

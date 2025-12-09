@@ -50,6 +50,7 @@ interface Complaint {
   description: string;
   status: 'pending' | 'mail_done' | 'resolved' | 'closed';
   mailSubject?: string;
+  courier?: string;
   resolution?: string;
   createdAt: string;
   resolvedAt?: string;
@@ -336,9 +337,10 @@ const ComplaintManagement: React.FC = () => {
             <Table className="table-fixed-layout">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Barcode</TableHead>
+                  <TableHead className="w-[200px]">AWB NO</TableHead>
                   <TableHead className="w-[120px]">Date</TableHead>
                   <TableHead className="w-[200px]">Email</TableHead>
+                  <TableHead className="w-[150px]">Courier</TableHead>
                   <TableHead className="w-[150px]">Status</TableHead>
                   <TableHead className="w-[200px]">Mail Subject</TableHead>
                   <TableHead className="w-[200px]">Actions</TableHead>
@@ -366,6 +368,19 @@ const ComplaintManagement: React.FC = () => {
                       </TableCell>
                       <TableCell className="table-cell-vertical-center">
                         {complaint.email}
+                      </TableCell>
+                      <TableCell className="table-cell-vertical-center">
+                        {complaint.courier ? (
+                          <Badge
+                            variant="outline"
+                            size="sm"
+                            className="bg-purple-50 text-purple-700 border-purple-200"
+                          >
+                            {complaint.courier}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="table-cell-vertical-center">
                         <div className="table-badge-container">
@@ -435,7 +450,7 @@ const ComplaintManagement: React.FC = () => {
                     </TableRow>
                     {expandedRows.has(complaint.id) && (
                       <TableRow>
-                        <TableCell colSpan={6} className="bg-gray-50 p-4">
+                        <TableCell colSpan={7} className="bg-gray-50 p-4">
                           <div className="space-y-3">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
@@ -490,6 +505,16 @@ const ComplaintManagement: React.FC = () => {
                                         'No mail subject provided'}
                                     </p>
                                   </div>
+                                  {complaint.courier && (
+                                    <div>
+                                      <span className="font-medium text-gray-600">
+                                        Courier:
+                                      </span>
+                                      <span className="ml-2 text-gray-800">
+                                        {complaint.courier}
+                                      </span>
+                                    </div>
+                                  )}
                                   {complaint.resolution && (
                                     <div>
                                       <span className="font-medium text-gray-600">
@@ -512,7 +537,7 @@ const ComplaintManagement: React.FC = () => {
                 {complaints.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center text-gray-500"
                     >
                       No complaints found

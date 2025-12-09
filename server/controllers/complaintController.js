@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 // Create a new complaint
 const createComplaint = async (req, res) => {
   try {
-    const { barcode, date, email, description, mailSubject } = req.body;
+    const { barcode, date, email, description, mailSubject, courier } = req.body;
 
     if (!barcode || !date || !email || !mailSubject) {
       return res.status(400).json({
@@ -26,6 +26,7 @@ const createComplaint = async (req, res) => {
         email,
         description: description || existingComplaint.description,
         mailSubject: mailSubject || existingComplaint.mailSubject,
+        courier: courier || existingComplaint.courier,
       });
 
       console.log('Updated existing complaint:', existingComplaint.toJSON());
@@ -39,6 +40,7 @@ const createComplaint = async (req, res) => {
           email: existingComplaint.email,
           description: existingComplaint.description,
           mailSubject: existingComplaint.mailSubject,
+          courier: existingComplaint.courier,
           status: existingComplaint.status,
           createdAt: existingComplaint.createdAt,
           updatedAt: existingComplaint.updatedAt,
@@ -52,6 +54,7 @@ const createComplaint = async (req, res) => {
       email,
       description: description || '',
       mailSubject: mailSubject || '',
+      courier: courier || null,
       status: 'pending',
     });
 
@@ -60,16 +63,17 @@ const createComplaint = async (req, res) => {
 
     res.status(201).json({
       message: 'Complaint created successfully',
-      complaint: {
-        id: complaint.id,
-        barcode: complaint.barcode,
-        date: complaint.date,
-        email: complaint.email,
-        description: complaint.description,
-        mailSubject: complaint.mailSubject,
-        status: complaint.status,
-        createdAt: complaint.createdAt,
-      },
+        complaint: {
+          id: complaint.id,
+          barcode: complaint.barcode,
+          date: complaint.date,
+          email: complaint.email,
+          description: complaint.description,
+          mailSubject: complaint.mailSubject,
+          courier: complaint.courier,
+          status: complaint.status,
+          createdAt: complaint.createdAt,
+        },
     });
   } catch (error) {
     console.error('Create complaint error:', error);

@@ -37,6 +37,10 @@ const Complaint = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    courier: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     resolution: {
       type: DataTypes.TEXT,
       allowNull: true,

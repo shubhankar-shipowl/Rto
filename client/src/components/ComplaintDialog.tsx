@@ -12,6 +12,13 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { AlertCircle, Mail, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 
@@ -45,6 +52,7 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
   const [email, setEmail] = useState('');
   const [description, setDescription] = useState('');
   const [mailSubject, setMailSubject] = useState('');
+  const [courier, setCourier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -52,6 +60,8 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
   const [existingComplaint, setExistingComplaint] = useState<Complaint | null>(
     null,
   );
+
+  const courierOptions = ['Ekart', 'Delhivery', 'Xpress Bee', 'Amazon'];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -115,6 +125,7 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
           email,
           description,
           mailSubject,
+          courier: courier || undefined,
         }),
       });
 
@@ -133,6 +144,7 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
       setEmail('');
       setDescription('');
       setMailSubject('');
+      setCourier('');
 
       // Close dialog after 2 seconds
       setTimeout(() => {
@@ -151,6 +163,7 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
     setEmail('');
     setDescription('');
     setMailSubject('');
+    setCourier('');
     setError('');
     setSuccess(false);
     setSuccessMessage('');
@@ -252,6 +265,29 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
             />
             <p className="text-xs text-gray-500">
               Subject line for the complaint email notification
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="courier">Courier</Label>
+            <Select
+              value={courier}
+              onValueChange={setCourier}
+              disabled={isLoading || success}
+            >
+              <SelectTrigger id="courier" className="w-full">
+                <SelectValue placeholder="Select a courier" />
+              </SelectTrigger>
+              <SelectContent>
+                {courierOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              Optional: Select the courier for this item
             </p>
           </div>
 
