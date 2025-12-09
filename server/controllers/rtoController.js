@@ -79,6 +79,7 @@ const uploadRTOData = async (req, res) => {
     // Extract barcodes and product data, grouping by RTS Date
     const productsByDate = {};
     const waybillCountsByDate = {}; // Track unique waybills per date
+    let invalidDateCount = 0;
 
     // Helpers to robustly read values from various possible headers
     const getFirst = (obj, keys) => {
@@ -95,17 +96,58 @@ const uploadRTOData = async (req, res) => {
       return undefined;
     };
 
-    const toDateOnly = (value) => {
-      if (!value) return 'no-date';
-      if (value instanceof Date) {
-        const y = value.getFullYear();
-        const m = String(value.getMonth() + 1).padStart(2, '0');
-        const d = String(value.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
+    const normalizeDate = (rawValue, fallbackValue) => {
+      const format = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
+      const tryDate = (val) => {
+        if (!val) return null;
+        if (val instanceof Date && !isNaN(val)) return format(val);
+        if (typeof val === 'number') {
+          // Excel serial date number
+          if (XLSX?.SSF?.parse_date_code) {
+            const parsed = XLSX.SSF.parse_date_code(val);
+            if (parsed) {
+              return format(
+                new Date(parsed.y, parsed.m - 1, parsed.d || 1),
+              );
+            }
+          }
+        }
+        const str = String(val).trim();
+        if (!str) return null;
+
+        // Try ISO-like first part before space
+        const base = str.includes(' ') ? str.split(' ')[0] : str;
+
+        // Handle dd/mm/yyyy or dd-mm-yyyy
+        const ddmmyy = base.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+        if (ddmmyy) {
+          const [, d, m, y] = ddmmyy;
+          const year = y.length === 2 ? `20${y}` : y;
+          return format(new Date(Number(year), Number(m) - 1, Number(d)));
+        }
+
+        // Fallback to Date parse
+        const parsed = new Date(base);
+        if (!isNaN(parsed)) return format(parsed);
+
+        return null;
+      };
+
+      // Try raw value first
+      let normalized = tryDate(rawValue);
+
+      // If invalid, try fallback (selected date from body)
+      if (!normalized && fallbackValue) {
+        normalized = tryDate(fallbackValue);
       }
-      const str = String(value);
-      // Handles formats like "2025-10-01 14:15:55" or Excel strings
-      return str.includes(' ') ? str.split(' ')[0] : str.substring(0, 10);
+
+      return normalized;
     };
 
     const toInt = (value, fallback = 1) => {
@@ -193,8 +235,13 @@ const uploadRTOData = async (req, res) => {
 
       // Include all records that have a waybill number, regardless of RTS date
       if (waybillNumber) {
-        // Use RTS date if available, otherwise use a default date
-        const dateOnly = toDateOnly(rtsDate);
+        // Normalize RTS date; fall back to selected upload date if invalid/missing
+        const dateOnly = normalizeDate(rtsDate, date);
+
+        if (!dateOnly) {
+          invalidDateCount += 1;
+          return; // skip this row due to invalid date
+        }
 
         if (!productsByDate[dateOnly]) {
           productsByDate[dateOnly] = [];
@@ -230,6 +277,9 @@ const uploadRTOData = async (req, res) => {
         0,
       )}`,
     );
+    if (invalidDateCount > 0) {
+      console.warn(`⚠️ Skipped ${invalidDateCount} rows due to invalid/missing RTS dates`);
+    }
     console.log(
       'Products grouped by RTS Date:',
       Object.keys(productsByDate).map(
