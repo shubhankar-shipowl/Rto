@@ -18,6 +18,11 @@ const {
   reconcileUnmatchedScan,
   getReconcilableScans,
 } = require('../controllers/rtoController');
+const {
+  triggerBackup,
+  getBackups,
+  cleanupBackups,
+} = require('../controllers/backupController');
 
 // Upload RTO Excel file
 router.post(
@@ -87,5 +92,10 @@ router.post('/scan/reconcile', reconcileUnmatchedScan);
 
 // Get reconcilable unmatched scans for a date
 router.get('/reconcilable/:date', getReconcilableScans);
+
+// Backup routes (Admin only)
+router.post('/backup/trigger', requireAdmin, triggerBackup);
+router.get('/backup/list', requireAdmin, getBackups);
+router.post('/backup/cleanup', requireAdmin, cleanupBackups);
 
 module.exports = router;

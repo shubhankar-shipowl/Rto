@@ -43,10 +43,21 @@ const sequelize = new Sequelize(
   }
 );
 
+// Track connection status
+let isConnected = false;
+
 const connectDB = async () => {
   try {
+    // Check if already connected
+    if (isConnected) {
+      console.log('✅ Database already connected, reusing connection');
+      return sequelize;
+    }
+
     await sequelize.authenticate();
-    console.log("MySQL database connected successfully");
+    isConnected = true;
+    console.log("✅ MySQL database connected successfully");
+    console.log(`📊 Connection pool configured: min=${sequelize.config.pool.min}, max=${sequelize.config.pool.max}`);
 
     // Fix invalid dates before syncing (try both methods)
     try {
@@ -66,7 +77,7 @@ const connectDB = async () => {
     // Sync database (create tables if they don't exist)
     try {
       await sequelize.sync({ alter: true });
-      console.log("Database synchronized");
+      console.log("✅ Database synchronized");
     } catch (syncError) {
       // If sync fails due to invalid dates, try to fix and retry
       if (syncError.message && syncError.message.includes("Incorrect date value")) {
@@ -115,7 +126,8 @@ const connectDB = async () => {
 
     return sequelize;
   } catch (error) {
-    console.error("Database connection error:", error.message);
+    isConnected = false;
+    console.error("❌ Database connection error:", error.message);
     console.error("Full error:", error);
     // Don't exit process - let the server start and retry
     // PM2 will handle restarts if needed
@@ -123,4 +135,34 @@ const connectDB = async () => {
   }
 };
 
-module.exports = { connectDB, sequelize };
+// Gracefully close database connection
+const closeDB = async () => {
+  try {
+    if (isConnected) {
+      console.log('🔄 Closing database connection...');
+      await sequelize.close();
+      isConnected = false;
+      console.log('✅ Database connection closed gracefully');
+    } else {
+      console.log('ℹ️  Database connection already closed');
+    }
+  } catch (error) {
+    console.error('❌ Error closing database connection:', error.message);
+    throw error;
+  }
+};
+
+// Handle process termination signals
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+  await closeDB();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+  await closeDB();
+  process.exit(0);
+});
+
+module.exports = { connectDB, closeDB, sequelize };

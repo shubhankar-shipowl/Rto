@@ -542,6 +542,52 @@ const scanBarcode = async (req, res) => {
       barcodes = [];
     }
 
+    // FIRST: Check if this barcode has already been scanned on ANY past date
+    const pastScan = await ScanResult.findOne({
+      where: {
+        date: { [Op.ne]: date }, // Different from current date
+        barcode: {
+          [Op.eq]: barcode, // Exact match for duplicate check
+        },
+      },
+      attributes: [
+        'date',
+        'match',
+        'productName',
+        'quantity',
+        'price',
+        'message',
+        'timestamp',
+      ],
+      order: [['timestamp', 'DESC']], // Get the most recent scan
+    });
+
+    // If found in past date, return error with the date it was scanned
+    if (pastScan) {
+      const scannedDate = pastScan.date;
+      const scannedDateFormatted = new Date(scannedDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      
+      return res.status(400).json({
+        error: `This AWB number has already been scanned on ${scannedDateFormatted} (${scannedDate})`,
+        alreadyScannedInPast: true,
+        scannedDate: scannedDate,
+        scannedDateFormatted: scannedDateFormatted,
+        previousScan: {
+          date: pastScan.date,
+          match: pastScan.match,
+          productName: pastScan.productName,
+          quantity: pastScan.quantity,
+          price: pastScan.price,
+          message: pastScan.message,
+          timestamp: pastScan.timestamp,
+        },
+      });
+    }
+
     // Check if this barcode has already been scanned today (case-insensitive comparison)
     const existingScan = await ScanResult.findOne({
       where: {

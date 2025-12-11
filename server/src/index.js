@@ -6,7 +6,10 @@ const path = require('path');
 require('dotenv').config();
 
 // Import database connection
-const { connectDB } = require('./database');
+const { connectDB, closeDB } = require('./database');
+
+// Import cron jobs
+const { startCronJobs, stopCronJobs } = require('./cronJobs');
 
 // Import routes
 const rtoRoutes = require('../routes/rtoRoutes');
@@ -80,6 +83,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/rto', rtoRoutes);
 app.use('/api/complaints', complaintRoutes);
 
+// Store server instance and cron jobs for graceful shutdown
+let server = null;
+let cronJobs = null;
+
 // Start server only after database connection
 async function startServer() {
   const maxRetries = 5;
@@ -91,9 +98,13 @@ async function startServer() {
       dbConnected = true;
       console.log("✅ Database connection established");
       
-      app.listen(PORT, () => {
+      // Start cron jobs after database connection
+      cronJobs = startCronJobs();
+      
+      server = app.listen(PORT, () => {
         console.log(`✅ Server is running on port ${PORT}`);
         console.log(`✅ Backend API: http://localhost:${PORT}`);
+        console.log(`✅ Database connection pool is active and ready`);
       });
     } catch (error) {
       retryCount++;
@@ -108,7 +119,7 @@ async function startServer() {
         console.error("⚠️  Server will retry connection on next request...");
         // Don't exit - let PM2 handle restarts
         // Start server anyway so health check can respond
-        app.listen(PORT, () => {
+        server = app.listen(PORT, () => {
           console.log(`⚠️  Server started on port ${PORT} but database connection failed`);
           console.log(`⚠️  API endpoints may not work until database is connected`);
           console.log(`⚠️  Check PM2 logs for details: pm2 logs rto-application`);
@@ -119,6 +130,55 @@ async function startServer() {
   
   attemptConnection();
 }
+
+// Graceful shutdown handler
+const gracefulShutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
+  
+  // Stop cron jobs first
+  if (cronJobs) {
+    stopCronJobs(cronJobs);
+  }
+  
+  if (server) {
+    server.close(async () => {
+      console.log('✅ HTTP server closed');
+      try {
+        await closeDB();
+        console.log('✅ Graceful shutdown completed');
+        process.exit(0);
+      } catch (error) {
+        console.error('❌ Error during shutdown:', error.message);
+        process.exit(1);
+      }
+    });
+    
+    // Force close after 10 seconds
+    setTimeout(() => {
+      console.error('⚠️  Forcing shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } else {
+    await closeDB();
+    process.exit(0);
+  }
+};
+
+// Handle process termination signals
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', async (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  await gracefulShutdown('uncaughtException');
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', async (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  await gracefulShutdown('unhandledRejection');
+});
 
 startServer();
 

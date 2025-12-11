@@ -1062,11 +1062,17 @@ export const RTODashboard: React.FC = () => {
                                       {result.barcode}
                                     </code>
                                     <div className="text-xs text-gray-500 mt-1">
-                                      {result.timestamp instanceof Date
-                                        ? result.timestamp.toLocaleTimeString()
-                                        : new Date(
-                                            result.timestamp,
-                                          ).toLocaleTimeString()}
+                                      {(result.timestamp instanceof Date
+                                        ? result.timestamp
+                                        : new Date(result.timestamp)
+                                      ).toLocaleString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit',
+                                      })}
                                     </div>
                                   </div>
                                   <div

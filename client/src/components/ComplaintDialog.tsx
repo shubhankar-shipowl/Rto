@@ -22,6 +22,28 @@ import {
 import { AlertCircle, Mail, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 
+// Utility function to format date in Indian Standard Time (IST)
+const formatDateInIST = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  // Parse date string (format: YYYY-MM-DD)
+  // Create a date object at noon IST to avoid timezone conversion issues
+  const [year, month, day] = dateString.split('-').map(Number);
+  
+  // Create date string in ISO format with time set to noon IST (12:00:00)
+  // This ensures the date doesn't shift when converted to IST
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T12:00:00+05:30`;
+  const date = new Date(dateStr);
+  
+  // Format in IST timezone
+  return date.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+
 interface ComplaintDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -183,7 +205,7 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
             Report an issue with the matched item for barcode{' '}
             <span className="font-mono font-semibold">{barcode}</span> on{' '}
             <span className="font-semibold">
-              {new Date(date).toLocaleDateString()}
+              {formatDateInIST(date)}
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -205,7 +227,14 @@ const ComplaintDialog: React.FC<ComplaintDialogProps> = ({
                   </span>
                   <span className="text-sm text-gray-600">
                     Created:{' '}
-                    {new Date(existingComplaint.createdAt).toLocaleDateString()}
+                    {new Date(existingComplaint.createdAt).toLocaleString('en-IN', {
+                      timeZone: 'Asia/Kolkata',
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </div>
                 {existingComplaint.resolution && (

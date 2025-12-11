@@ -448,7 +448,34 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       console.log('🔍 Response status:', response.status);
 
       if (!response.ok) {
-        if (data.alreadyScanned) {
+        if (data.alreadyScannedInPast) {
+          // AWB was scanned on a past date
+          const duplicateResult: BarcodeResult = {
+            barcode: barcode.trim(),
+            match: false,
+            timestamp: new Date(),
+            productName: data.previousScan?.productName || 'N/A',
+            message: data.error || `Already scanned on ${data.scannedDateFormatted}`,
+            alreadyScanned: true,
+            previousScan: {
+              timestamp: data.previousScan?.timestamp || 'N/A',
+              status: data.previousScan?.match ? 'Matched' : 'Unmatched',
+            },
+          };
+          setScanResults((prev) => [duplicateResult, ...prev]);
+          onScanResult(duplicateResult);
+          setErrorPopup({
+            isOpen: true,
+            title: 'AWB Already Scanned',
+            message: data.error || `This AWB number "${barcode.trim()}" has already been scanned on ${data.scannedDateFormatted} (${data.scannedDate}).`,
+            type: 'error',
+            previousScan: {
+              timestamp: data.previousScan?.timestamp || 'N/A',
+              status: data.previousScan?.match ? 'Matched' : 'Unmatched',
+            },
+          });
+        } else if (data.alreadyScanned) {
+          // AWB was scanned on the same date
           const duplicateResult: BarcodeResult = {
             barcode: barcode.trim(),
             match: false,
@@ -460,7 +487,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
             alreadyScanned: true,
             previousScan: {
               timestamp: data.previousScan?.timestamp || 'N/A',
-              status: data.previousScan?.status || 'N/A',
+              status: data.previousScan?.match ? 'Matched' : 'Unmatched',
             },
           };
           setScanResults((prev) => [duplicateResult, ...prev]);
@@ -472,7 +499,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
             type: 'warning',
             previousScan: {
               timestamp: data.previousScan?.timestamp || 'N/A',
-              status: data.previousScan?.status || 'N/A',
+              status: data.previousScan?.match ? 'Matched' : 'Unmatched',
             },
           });
         } else {
@@ -938,7 +965,14 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
-                        {new Date(result.timestamp).toLocaleTimeString()}
+                        {new Date(result.timestamp).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
                       </p>
                     </div>
                     <Badge

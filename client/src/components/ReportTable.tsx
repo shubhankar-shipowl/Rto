@@ -41,6 +41,21 @@ import ComplaintDialog from './ComplaintDialog';
 import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
 import { toast } from 'sonner';
 
+// Utility function to format date in IST as YYYY-MM-DD without timezone conversion issues
+const formatDateInIST = (date: Date): string => {
+  if (!date || isNaN(date.getTime())) return '';
+  
+  // Format date directly in IST timezone to avoid UTC conversion issues
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  
+  return formatter.format(date);
+};
+
 // Types
 interface BarcodeResult {
   barcode: string;
@@ -113,7 +128,14 @@ const formatPrice = (price: number | undefined): string => {
 const formatTimestamp = (timestamp: Date | string | undefined): string => {
   if (!timestamp) return 'Unknown time';
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-  return date.toLocaleTimeString();
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 };
 
 const escapeCSVField = (field: any): string => {
@@ -236,7 +258,8 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   // Complaint handlers
   const handleOpenComplaint = useCallback(
     (barcode: string) => {
-      const dateString = selectedDate?.toISOString().split('T')[0] || '';
+      // Use IST formatting to avoid timezone conversion issues
+      const dateString = selectedDate ? formatDateInIST(selectedDate) : '';
       setComplaintDialog({
         isOpen: true,
         barcode,

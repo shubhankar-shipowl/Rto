@@ -85,6 +85,10 @@ public
 tmp/
 temp/
 
+# Database backups
+server/backups/
+*.sql
+
 # Editor directories and files
 .vscode/
 .idea/

@@ -42,6 +42,28 @@ import {
 import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 
+// Utility function to format date in Indian Standard Time (IST)
+const formatDateInIST = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  // Parse date string (format: YYYY-MM-DD)
+  // Create a date object at noon IST to avoid timezone conversion issues
+  const [year, month, day] = dateString.split('-').map(Number);
+  
+  // Create date string in ISO format with time set to noon IST (12:00:00)
+  // This ensures the date doesn't shift when converted to IST
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T12:00:00+05:30`;
+  const date = new Date(dateStr);
+  
+  // Format in IST timezone
+  return date.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+
 interface Complaint {
   id: string;
   barcode: string;
@@ -72,6 +94,8 @@ const ComplaintManagement: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [deleteAllDialog, setDeleteAllDialog] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [complaintToDelete, setComplaintToDelete] = useState<Complaint | null>(null);
 
   const toggleRowExpansion = (complaintId: string) => {
     setExpandedRows((prev) => {
@@ -284,6 +308,40 @@ const ComplaintManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteComplaint = async () => {
+    if (!complaintToDelete) return;
+
+    try {
+      setActionLoading(true);
+      const response = await fetch(
+        API_ENDPOINTS.COMPLAINTS.DELETE_BY_BARCODE(complaintToDelete.barcode),
+        {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          throw new Error('Access denied: Admin privileges required');
+        }
+        throw new Error(errorData.error || 'Failed to delete complaint');
+      }
+
+      await fetchComplaints();
+      setDeleteDialog(false);
+      setComplaintToDelete(null);
+      setError(''); // Clear any previous errors
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to delete complaint',
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -364,7 +422,7 @@ const ComplaintManagement: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell className="table-cell-vertical-center">
-                        {new Date(complaint.date).toLocaleDateString()}
+                        {formatDateInIST(complaint.date)}
                       </TableCell>
                       <TableCell className="table-cell-vertical-center">
                         {complaint.email}
@@ -445,6 +503,22 @@ const ComplaintManagement: React.FC = () => {
                               Back to Pending
                             </Button>
                           )}
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setComplaintToDelete(complaint);
+                                setDeleteDialog(true);
+                              }}
+                              disabled={actionLoading}
+                              className="button-with-icon"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -474,7 +548,15 @@ const ComplaintManagement: React.FC = () => {
                                     <span className="ml-2 text-gray-800">
                                       {new Date(
                                         complaint.createdAt,
-                                      ).toLocaleString()}
+                                      ).toLocaleString('en-IN', {
+                                        timeZone: 'Asia/Kolkata',
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit',
+                                      })}
                                     </span>
                                   </div>
                                   {complaint.resolvedAt && (
@@ -485,7 +567,15 @@ const ComplaintManagement: React.FC = () => {
                                       <span className="ml-2 text-gray-800">
                                         {new Date(
                                           complaint.resolvedAt,
-                                        ).toLocaleString()}
+                                        ).toLocaleString('en-IN', {
+                                          timeZone: 'Asia/Kolkata',
+                                          year: 'numeric',
+                                          month: '2-digit',
+                                          day: '2-digit',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          second: '2-digit',
+                                        })}
                                       </span>
                                     </div>
                                   )}
@@ -711,6 +801,48 @@ const ComplaintManagement: React.FC = () => {
               className="bg-red-600 hover:bg-red-700"
             >
               {actionLoading ? 'Deleting...' : 'Delete All Complaints'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Single Complaint Confirmation Dialog */}
+      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Delete Complaint
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this complaint? This action cannot
+              be undone.
+              <br />
+              <span className="font-semibold text-red-600 mt-2 block">
+                AWB NO: <span className="font-mono">{complaintToDelete?.barcode}</span>
+                <br />
+                Date: {complaintToDelete && formatDateInIST(complaintToDelete.date)}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialog(false);
+                setComplaintToDelete(null);
+              }}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteComplaint}
+              disabled={actionLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {actionLoading ? 'Deleting...' : 'Delete Complaint'}
             </Button>
           </DialogFooter>
         </DialogContent>
