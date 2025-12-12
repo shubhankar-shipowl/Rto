@@ -38,6 +38,7 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2,
+  Download,
 } from 'lucide-react';
 import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -342,6 +343,100 @@ const ComplaintManagement: React.FC = () => {
     }
   };
 
+  // CSV export utility functions
+  const escapeCSVField = (field: any): string => {
+    const fieldStr = String(field || '');
+    if (
+      fieldStr.includes(',') ||
+      fieldStr.includes('\n') ||
+      fieldStr.includes('"')
+    ) {
+      return `"${fieldStr.replace(/"/g, '""')}"`;
+    }
+    return fieldStr;
+  };
+
+  const createCSVRow = (fields: any[]): string => {
+    return fields.map(escapeCSVField).join(',');
+  };
+
+  const handleDownloadComplaints = () => {
+    try {
+      if (complaints.length === 0) {
+        alert('No complaints to download');
+        return;
+      }
+
+      // CSV headers
+      const csvHeaders = [
+        'AWB NO',
+        'Date',
+        'Email',
+        'Courier',
+        'Status',
+        'Mail Subject',
+        'Description',
+        'Created At',
+        'Resolved At',
+        'Resolution',
+      ];
+
+      // Prepare CSV data
+      const csvData = complaints.map((complaint) => [
+        complaint.barcode || '',
+        formatDateInIST(complaint.date),
+        complaint.email || '',
+        complaint.courier || '',
+        getStatusText(complaint.status),
+        complaint.mailSubject || '',
+        complaint.description || '',
+        complaint.createdAt
+          ? new Date(complaint.createdAt).toLocaleString('en-IN', {
+              timeZone: 'Asia/Kolkata',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            })
+          : '',
+        complaint.resolvedAt
+          ? new Date(complaint.resolvedAt).toLocaleString('en-IN', {
+              timeZone: 'Asia/Kolkata',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            })
+          : '',
+        complaint.resolution || '',
+      ]);
+
+      // Create CSV content
+      const csvContent = [csvHeaders, ...csvData]
+        .map(createCSVRow)
+        .join('\n');
+
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Generate filename with current date
+      const dateString = new Date().toISOString().split('T')[0];
+      a.download = `complaints-${dateString}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting complaints:', error);
+      setError('Failed to export complaints. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -365,6 +460,15 @@ const ComplaintManagement: React.FC = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button
+                onClick={handleDownloadComplaints}
+                variant="outline"
+                size="sm"
+                disabled={actionLoading || complaints.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
               {complaints.length > 0 && isAdmin && (
                 <Button
                   onClick={() => setDeleteAllDialog(true)}
