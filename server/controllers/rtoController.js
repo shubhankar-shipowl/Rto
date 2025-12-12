@@ -1361,9 +1361,28 @@ const getCourierCounts = async (req, res) => {
       });
     }
 
+    // Count unique waybills per courier (not all products)
+    // Use a Map to track unique barcodes per courier
+    const courierWaybills = {};
+
     barcodes.forEach((item) => {
       const courier = item.fulfilledBy || 'Unknown';
-      courierCounts[courier] = (courierCounts[courier] || 0) + 1;
+      const barcode = item.barcode;
+
+      // Initialize courier entry if it doesn't exist
+      if (!courierWaybills[courier]) {
+        courierWaybills[courier] = new Set();
+      }
+
+      // Add unique barcode to the courier's set
+      if (barcode) {
+        courierWaybills[courier].add(barcode);
+      }
+    });
+
+    // Convert sets to counts
+    Object.keys(courierWaybills).forEach((courier) => {
+      courierCounts[courier] = courierWaybills[courier].size;
     });
 
     // Convert to array format for easier frontend handling
