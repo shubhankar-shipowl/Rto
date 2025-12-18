@@ -229,6 +229,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       let scanResults = [];
       let matchedCount = 0;
       let unmatchedCount = 0;
+      let totalUniqueScanned = 0;
 
       // Get total available items from RTO data
       if (rtoResponse.ok) {
@@ -266,16 +267,45 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       // Get scan results
       if (scanResponse.ok) {
         scanResults = await scanResponse.json();
-        matchedCount = scanResults.filter((item: any) => item.match).length;
-        unmatchedCount = scanResults.length - matchedCount;
-        console.log('Scan results for', dateString, ':', scanResults.length);
+        
+        // Count unique barcodes (not total scan attempts)
+        // Use a Map to track the latest scan result for each barcode
+        const barcodeStatusMap = new Map<string, boolean>();
+        
+        // Process scans in order (they're already sorted by timestamp DESC from API)
+        // So we'll get the latest status for each barcode
+        scanResults.forEach((item: any) => {
+          const barcode = item.barcode?.toString().toLowerCase();
+          if (barcode && !barcodeStatusMap.has(barcode)) {
+            // Only store the first occurrence (which is the latest due to DESC sort)
+            barcodeStatusMap.set(barcode, item.match === true);
+          }
+        });
+        
+        // Count unique barcodes by their latest status
+        let matchedUniqueCount = 0;
+        let unmatchedUniqueCount = 0;
+        
+        barcodeStatusMap.forEach((isMatched) => {
+          if (isMatched) {
+            matchedUniqueCount++;
+          } else {
+            unmatchedUniqueCount++;
+          }
+        });
+        
+        totalUniqueScanned = barcodeStatusMap.size;
+        matchedCount = matchedUniqueCount;
+        unmatchedCount = unmatchedUniqueCount;
+        
+        console.log('Scan results for', dateString, ':', scanResults.length, 'total scans,', totalUniqueScanned, 'unique barcodes (', matchedCount, 'matched,', unmatchedCount, 'unmatched)');
       } else {
         console.log('No scan results for date:', dateString);
         scanResults = [];
       }
 
       const summary = {
-        totalScanned: scanResults.length,
+        totalScanned: totalUniqueScanned,
         matched: matchedCount,
         unmatched: unmatchedCount,
         totalAvailable: totalAvailable,
@@ -520,15 +550,26 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
         setScanResults((prev) => [newResult, ...prev]);
         onScanResult(newResult);
 
-        // Update summary counts
-        setScanSummary((prev) => ({
-          ...prev,
-          totalScanned: prev.totalScanned + 1,
-          matched: prev.matched + (data.match ? 1 : 0),
-          unmatched: prev.unmatched + (data.match ? 0 : 1),
-        }));
+        // Update summary counts - check if barcode was already scanned
+        setScanSummary((prev) => {
+          const barcodeLower = barcode.trim().toLowerCase();
+          const wasAlreadyScanned = scanResults.some(
+            (result) => result.barcode?.toLowerCase() === barcodeLower
+          );
+          
+          // Only update if this is a new unique barcode
+          if (!wasAlreadyScanned) {
+            return {
+              ...prev,
+              totalScanned: prev.totalScanned + 1,
+              matched: prev.matched + (data.match ? 1 : 0),
+              unmatched: prev.unmatched + (data.match ? 0 : 1),
+            };
+          }
+          return prev;
+        });
 
-        // Refresh scan data to get latest results
+        // Refresh scan data to get latest results (this will recalculate correctly)
         setTimeout(() => {
           loadScanData(selectedDate);
           loadCourierCounts(selectedDate);
