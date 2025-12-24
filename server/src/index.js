@@ -3,7 +3,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
-require('dotenv').config();
+
+// Load environment variables - load server/.env first, then root .env to override
+// This ensures root .env (new credentials) takes precedence
+require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Load server/.env first
+require('dotenv').config({ path: path.join(__dirname, '../../.env'), override: true }); // Root .env overrides
 
 // Import database connection
 const { connectDB, closeDB } = require('./database');

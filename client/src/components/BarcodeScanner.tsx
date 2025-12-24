@@ -232,20 +232,24 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       let totalUniqueScanned = 0;
 
       // Get total available items from RTO data
+      // We'll calculate it from courier counts to ensure consistency
       if (rtoResponse.ok) {
         const rtoData = await rtoResponse.json();
         console.log('🔍 RTO Data received:', rtoData);
         console.log('📊 Total products in response:', rtoData.barcodes?.length);
 
         if (rtoData.barcodes && Array.isArray(rtoData.barcodes)) {
-          // Count unique waybills instead of total products
+          // Count unique waybills - same logic as courier counts
+          // This ensures Total Available matches the sum of courier distribution
           const uniqueWaybills = new Set();
           const allBarcodes = [];
 
           rtoData.barcodes.forEach((item: any, index: number) => {
-            allBarcodes.push(item.barcode);
-            if (item.barcode) {
-              uniqueWaybills.add(item.barcode);
+            const barcode = item.barcode;
+            if (barcode) {
+              allBarcodes.push(barcode);
+              // Add to set to get unique count (same as courier counts logic)
+              uniqueWaybills.add(barcode.toString().toLowerCase());
             }
           });
 
@@ -253,6 +257,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           console.log('📋 All barcodes:', allBarcodes);
           console.log('🔢 Unique waybills:', Array.from(uniqueWaybills));
           console.log('✅ Final count:', totalAvailable);
+          console.log('📊 Total barcodes array length:', rtoData.barcodes.length);
         } else {
           totalAvailable = 0;
         }
@@ -262,6 +267,32 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
       } else {
         console.log('❌ RTO data not found for date:', dateString);
         totalAvailable = 0;
+      }
+
+      // Recalculate Total Available as sum of courier counts for consistency
+      // This ensures Total Available matches the Courier Distribution display
+      try {
+        const courierResponse = await fetch(
+          API_ENDPOINTS.RTO.COURIER_COUNTS(dateString),
+        );
+        if (courierResponse.ok) {
+          const courierData = await courierResponse.json();
+          if (courierData.courierCounts && Array.isArray(courierData.courierCounts) && courierData.courierCounts.length > 0) {
+            const sumOfCourierCounts = courierData.courierCounts.reduce(
+              (sum: number, courier: any) => sum + (courier.count || 0),
+              0
+            );
+            // Use the sum of courier counts as Total Available for consistency
+            if (sumOfCourierCounts > 0) {
+              console.log('📊 Recalculating Total Available from courier counts:', sumOfCourierCounts);
+              console.log('📊 Courier breakdown:', courierData.courierCounts.map((c: any) => `${c.courier}: ${c.count}`).join(', '));
+              totalAvailable = sumOfCourierCounts;
+            }
+          }
+        }
+      } catch (courierError) {
+        console.warn('⚠️ Could not fetch courier counts for Total Available calculation:', courierError);
+        // Fall back to the count from barcodes array
       }
 
       // Get scan results

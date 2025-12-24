@@ -345,23 +345,51 @@ export const RTODashboard: React.FC = () => {
         const data = await response.json();
         console.log('✅ Reports RTO data loaded:', data);
 
-        // Count unique waybills from the barcodes array
-        if (data.barcodes && Array.isArray(data.barcodes)) {
+        // Calculate Total Available as sum of courier counts for consistency
+        // This ensures Total Available matches the Courier Distribution display
+        let totalAvailable = 0;
+        
+        // First, try to get from courier counts API (most accurate)
+        try {
+          const courierResponse = await fetch(
+            API_ENDPOINTS.RTO.COURIER_COUNTS(dateString),
+          );
+          if (courierResponse.ok) {
+            const courierData = await courierResponse.json();
+            if (courierData.courierCounts && Array.isArray(courierData.courierCounts) && courierData.courierCounts.length > 0) {
+              totalAvailable = courierData.courierCounts.reduce(
+                (sum: number, courier: any) => sum + (courier.count || 0),
+                0
+              );
+              console.log('📊 Total Available from courier counts:', totalAvailable);
+              console.log('📊 Courier breakdown:', courierData.courierCounts.map((c: any) => `${c.courier}: ${c.count}`).join(', '));
+            }
+          }
+        } catch (courierError) {
+          console.warn('⚠️ Could not fetch courier counts, falling back to barcodes count:', courierError);
+        }
+        
+        // Fallback: Count unique waybills from barcodes array if courier counts not available
+        if (totalAvailable === 0 && data.barcodes && Array.isArray(data.barcodes)) {
           const uniqueWaybills = new Set();
           data.barcodes.forEach((item: any) => {
-            if (item.barcode) {
-              uniqueWaybills.add(item.barcode);
+            const barcode = item.barcode;
+            if (barcode) {
+              uniqueWaybills.add(barcode.toString().toLowerCase());
             }
           });
-          const totalAvailable = uniqueWaybills.size;
-          console.log('📊 Total available waybills:', totalAvailable);
-          setReportsTotalAvailable(totalAvailable);
+          totalAvailable = uniqueWaybills.size;
+          console.log('📊 Total Available from barcodes (fallback):', totalAvailable);
+          console.log('📊 Total barcodes array length:', data.barcodes.length);
+        }
+        
+        setReportsTotalAvailable(totalAvailable);
 
-          // Store all products for unscanned calculation
-          setReportsRTOData(data.barcodes || []);
+        // Store all products for unscanned calculation
+        if (data.barcodes && Array.isArray(data.barcodes)) {
+          setReportsRTOData(data.barcodes);
         } else {
           console.log('⚠️ No barcodes data found');
-          setReportsTotalAvailable(0);
           setReportsRTOData([]);
         }
       } else {

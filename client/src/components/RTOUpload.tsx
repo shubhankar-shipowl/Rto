@@ -21,21 +21,47 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
   selectedDate,
   onUploadSuccess,
 }) => {
-  const [file, setFile] = useState<File | null>(null);
+  const [oldSheetFile, setOldSheetFile] = useState<File | null>(null);
+  const [nimbuFile, setNimbuFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const validateFile = (file: File): boolean => {
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+    ];
+    const allowedExtensions = ['.xlsx', '.xls'];
+    const fileExtension = file.name
+      .toLowerCase()
+      .substring(file.name.lastIndexOf('.'));
+
+    return (
+      allowedTypes.includes(file.type) ||
+      allowedExtensions.includes(fileExtension)
+    );
+  };
+
+  const handleOldSheetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      // Validate file type
-      const allowedTypes = [
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-excel',
-      ];
+      if (validateFile(selectedFile)) {
+        setOldSheetFile(selectedFile);
+        setUploadResult(null);
+      } else {
+        alert('Please select a valid Excel file (.xlsx or .xls)');
+        event.target.value = '';
+      }
+    }
+  };
 
-      if (allowedTypes.includes(selectedFile.type)) {
-        setFile(selectedFile);
+  const handleNimbuFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      if (validateFile(selectedFile)) {
+        setNimbuFile(selectedFile);
         setUploadResult(null);
       } else {
         alert('Please select a valid Excel file (.xlsx or .xls)');
@@ -45,8 +71,8 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      alert('Please select a file');
+    if (!oldSheetFile && !nimbuFile) {
+      alert('Please select at least one file (Old Sheet or Nimbu Sheet)');
       return;
     }
 
@@ -54,8 +80,23 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('date', new Date().toISOString().split('T')[0]);
+
+      // Add old sheet file if provided
+      if (oldSheetFile) {
+        formData.append('file', oldSheetFile);
+      }
+
+      // Add Nimbu file if provided
+      if (nimbuFile) {
+        formData.append('nimbuFile', nimbuFile);
+      }
+
+      formData.append(
+        'date',
+        selectedDate
+          ? selectedDate.toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+      );
 
       const response = await fetch(API_ENDPOINTS.RTO.UPLOAD, {
         method: 'POST',
@@ -67,12 +108,17 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
       if (response.ok) {
         setUploadResult(result);
         onUploadSuccess(result);
-        setFile(null);
-        // Reset file input
-        const fileInput = document.getElementById(
-          'file-upload',
+        setOldSheetFile(null);
+        setNimbuFile(null);
+        // Reset file inputs
+        const oldSheetInput = document.getElementById(
+          'old-sheet-upload',
         ) as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+        const nimbuInput = document.getElementById(
+          'nimbu-file-upload',
+        ) as HTMLInputElement;
+        if (oldSheetInput) oldSheetInput.value = '';
+        if (nimbuInput) nimbuInput.value = '';
       } else {
         throw new Error(result.error || 'Upload failed');
       }
@@ -94,41 +140,76 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
           Upload RTO Excel File
         </CardTitle>
         <CardDescription className="text-gray-600 text-base">
-          Upload the RTO Excel sheet. The Excel file must include required
-          columns: WayBill Number and RTS Date. All records from the file will
-          be processed and grouped by their RTS Date.
+          Upload RTO Excel sheets. You can upload the old sheet format and/or
+          the new Nimbu sheet. The system will automatically merge data from
+          both sheets. Courier names (Delhivery and XB) will be normalized.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
-        {/* File Upload */}
+        {/* Old Sheet Upload */}
         <div className="space-y-4">
           <Label
-            htmlFor="file-upload"
+            htmlFor="old-sheet-upload"
             className="text-sm font-semibold text-gray-700"
           >
-            Choose Excel File
+            Parcel X
           </Label>
           <div className="relative">
             <Input
-              id="file-upload"
+              id="old-sheet-upload"
               type="file"
               accept=".xlsx,.xls"
-              onChange={handleFileChange}
+              onChange={handleOldSheetChange}
               className="h-14 border-2 border-dashed border-gray-300 hover:border-blue-400 focus:border-blue-500 rounded-xl transition-all duration-200 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20"
             />
             <Upload className="absolute right-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
           </div>
-          {file && (
+          {oldSheetFile && (
             <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
               <div className="p-2 bg-green-100 rounded-lg">
                 <FileSpreadsheet className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <span className="text-sm text-green-700 font-semibold">
-                  Selected: {file.name}
+                  Selected: {oldSheetFile.name}
                 </span>
                 <p className="text-xs text-green-600">
-                  Size: {(file.size / 1024 / 1024).toFixed(2)} MB
+                  Size: {(oldSheetFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Nimbu Sheet Upload */}
+        <div className="space-y-4">
+          <Label
+            htmlFor="nimbu-file-upload"
+            className="text-sm font-semibold text-gray-700"
+          >
+            NimbusPost
+          </Label>
+          <div className="relative">
+            <Input
+              id="nimbu-file-upload"
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleNimbuFileChange}
+              className="h-14 border-2 border-dashed border-gray-300 hover:border-purple-400 focus:border-purple-500 rounded-xl transition-all duration-200 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20"
+            />
+            <Upload className="absolute right-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+          </div>
+          {nimbuFile && (
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <FileSpreadsheet className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <span className="text-sm text-purple-700 font-semibold">
+                  Selected: {nimbuFile.name}
+                </span>
+                <p className="text-xs text-purple-600">
+                  Size: {(nimbuFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
@@ -138,7 +219,7 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
         {/* Upload Button */}
         <Button
           onClick={handleUpload}
-          disabled={!file || isUploading}
+          disabled={(!oldSheetFile && !nimbuFile) || isUploading}
           className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
         >
           {isUploading ? (
@@ -181,9 +262,10 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
                 </p>
               </div>
               <div className="bg-white/60 p-3 rounded-lg">
-                <p className="text-xs text-green-600 font-medium">File</p>
+                <p className="text-xs text-green-600 font-medium">Files</p>
                 <p className="text-sm font-semibold text-green-800 truncate">
-                  {file?.name}
+                  {oldSheetFile?.name || ''}{' '}
+                  {nimbuFile ? (oldSheetFile ? ', ' : '') + nimbuFile.name : ''}
                 </p>
               </div>
             </div>

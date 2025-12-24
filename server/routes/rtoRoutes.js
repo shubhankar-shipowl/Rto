@@ -24,29 +24,45 @@ const {
   cleanupBackups,
 } = require('../controllers/backupController');
 
-// Upload RTO Excel file
+// Upload RTO Excel file (supports single or multiple files)
 router.post(
   '/upload',
   (req, res, next) => {
     console.log('📤 Multer upload middleware called');
-    upload.single('file')(req, res, (err) => {
+    // Try multiple files first, fallback to single file
+    upload.fields([
+      { name: 'file', maxCount: 1 },
+      { name: 'nimbuFile', maxCount: 1 }
+    ])(req, res, (err) => {
       if (err) {
         console.error('❌ Multer error:', err);
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({
-            error: 'File too large. Maximum size is 10MB.',
+            error: 'File too large. Maximum size is 10MB per file.',
           });
         }
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
           return res.status(400).json({
             error:
-              'Unexpected field name. Please use "file" as the field name.',
+              'Unexpected field name. Please use "file" for old sheet and "nimbuFile" for Nimbu sheet.',
           });
         }
         return res.status(400).json({
           error: err.message || 'File upload failed',
         });
       }
+      
+      // Normalize files: combine req.files into a single array
+      if (req.files) {
+        req.files = [
+          ...(req.files.file || []),
+          ...(req.files.nimbuFile || [])
+        ];
+      } else if (req.file) {
+        // Fallback: if only single file upload, convert to array
+        req.files = [req.file];
+      }
+      
       console.log('✅ Multer upload middleware completed successfully');
       next();
     });

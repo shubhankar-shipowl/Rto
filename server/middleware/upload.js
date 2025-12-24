@@ -68,4 +68,15 @@ const upload = multer({
   },
 });
 
+// Upload multiple files (for old sheet + new Nimbu sheet)
+const uploadMultiple = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    files: 2, // Allow up to 2 files
+  },
+});
+
 module.exports = upload;
+module.exports.uploadMultiple = uploadMultiple;

@@ -27,6 +27,13 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -89,6 +96,7 @@ interface ComplaintDialogState {
 
 // Constants
 const CSV_HEADERS = [
+  'Source',
   'Courier Name',
   'Barcode',
   'Status',
@@ -100,16 +108,17 @@ const CSV_HEADERS = [
 
 const TABLE_CONFIGS = {
   matched: {
-    columns: 6,
-    headers: ['Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
+    columns: 7,
+    headers: ['Source', 'Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
   },
   unscanned: {
-    columns: 6,
-    headers: ['Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
+    columns: 7,
+    headers: ['Source', 'Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
   },
   unmatched: {
-    columns: 6,
+    columns: 7,
     headers: [
+      'Source',
       'Courier Name',
       'Barcode',
       'Status',
@@ -184,6 +193,19 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   const [matchedSearchTerm, setMatchedSearchTerm] = useState('');
   const [unscannedSearchTerm, setUnscannedSearchTerm] = useState('');
   const [unmatchedSearchTerm, setUnmatchedSearchTerm] = useState('');
+  
+  // Source filter state
+  const [matchedSourceFilter, setMatchedSourceFilter] = useState<string>('all');
+  const [unscannedSourceFilter, setUnscannedSourceFilter] = useState<string>('all');
+  const [unmatchedSourceFilter, setUnmatchedSourceFilter] = useState<string>('all');
+
+  // Helper to get source display name
+  const getSourceDisplayName = useCallback((source: string | undefined) => {
+    if (!source) return 'Unknown';
+    if (source.toLowerCase().includes('nimbu')) return 'NimbusPost';
+    if (source.toLowerCase().includes('old') || source.toLowerCase().includes('parcel')) return 'Parcel X';
+    return source;
+  }, []);
 
   // Memoized data processing
   const processedData = useMemo(() => {
@@ -208,6 +230,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
         quantity: rtoItem?.quantity || scanResult.quantity || 1,
         price: rtoItem?.price || scanResult.price || 0,
         fulfilledBy: rtoItem?.fulfilledBy || 'Unknown Courier',
+        source: getSourceDisplayName(rtoItem?.source),
       };
     });
 
@@ -221,29 +244,86 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       matchedData,
       unmatchedData,
     };
-  }, [data, rtoData]);
+  }, [data, rtoData, getSourceDisplayName]);
+
+  // Get available sources from the data
+  const availableSources = useMemo(() => {
+    const sources = new Set<string>();
+    
+    // Get sources from matched data
+    processedData.matchedData.forEach((item) => {
+      if (item.source && item.source !== 'Unknown') {
+        sources.add(item.source);
+      }
+    });
+    
+    // Get sources from unmatched data
+    processedData.unmatchedData.forEach((item) => {
+      if (item.source && item.source !== 'Unknown') {
+        sources.add(item.source);
+      }
+    });
+    
+    // Get sources from unscanned products
+    if (Array.isArray(unscannedProducts)) {
+      unscannedProducts.forEach((item) => {
+        const source = getSourceDisplayName(item.source);
+        if (source && source !== 'Unknown') {
+          sources.add(source);
+        }
+      });
+    }
+    
+    return Array.from(sources).sort();
+  }, [processedData.matchedData, processedData.unmatchedData, unscannedProducts, getSourceDisplayName]);
 
   // Filtered data based on search terms
   const filteredData = useMemo(() => {
-    const filterItems = (items: any[], searchTerm: string) => {
-      if (!searchTerm.trim()) return items;
+    // Helper to get source display name
+    const getSourceDisplayName = (source: string | undefined) => {
+      if (!source) return 'Unknown';
+      if (source.toLowerCase().includes('nimbu')) return 'NimbusPost';
+      if (source.toLowerCase().includes('old') || source.toLowerCase().includes('parcel')) return 'Parcel X';
+      return source;
+    };
 
-      const term = searchTerm.toLowerCase();
-      return items.filter(
-        (item) =>
-          item.barcode?.toLowerCase().includes(term) ||
-          item.productName?.toLowerCase().includes(term) ||
-          item.fulfilledBy?.toLowerCase().includes(term) ||
-          item.orderId?.toString().includes(term),
-      );
+    const filterItems = (items: any[], searchTerm: string, sourceFilter: string) => {
+      let filtered = items;
+
+      // Filter by source first
+      if (sourceFilter !== 'all') {
+        filtered = filtered.filter((item) => {
+          const itemSource = getSourceDisplayName(item.source);
+          return itemSource === sourceFilter;
+        });
+      }
+
+      // Then filter by search term
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(
+          (item) => {
+            return (
+              item.barcode?.toLowerCase().includes(term) ||
+              item.productName?.toLowerCase().includes(term) ||
+              item.fulfilledBy?.toLowerCase().includes(term) ||
+              item.orderId?.toString().includes(term) ||
+              getSourceDisplayName(item.source).toLowerCase().includes(term)
+            );
+          }
+        );
+      }
+
+      return filtered;
     };
 
     return {
-      matchedData: filterItems(processedData.matchedData, matchedSearchTerm),
-      unscannedData: filterItems(unscannedProducts, unscannedSearchTerm),
+      matchedData: filterItems(processedData.matchedData, matchedSearchTerm, matchedSourceFilter),
+      unscannedData: filterItems(unscannedProducts, unscannedSearchTerm, unscannedSourceFilter),
       unmatchedData: filterItems(
         processedData.unmatchedData,
         unmatchedSearchTerm,
+        unmatchedSourceFilter,
       ),
     };
   }, [
@@ -253,6 +333,9 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     matchedSearchTerm,
     unscannedSearchTerm,
     unmatchedSearchTerm,
+    matchedSourceFilter,
+    unscannedSourceFilter,
+    unmatchedSourceFilter,
   ]);
 
   // Complaint handlers
@@ -405,13 +488,36 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     loadReconcilableScans();
   }, [loadReconcilableScans]);
 
+  // Reset source filters when date or data changes, or if selected source is no longer available
+  useEffect(() => {
+    // Reset to 'all' if current filter is not in available sources
+    if (matchedSourceFilter !== 'all' && !availableSources.includes(matchedSourceFilter)) {
+      setMatchedSourceFilter('all');
+    }
+    if (unscannedSourceFilter !== 'all' && !availableSources.includes(unscannedSourceFilter)) {
+      setUnscannedSourceFilter('all');
+    }
+    if (unmatchedSourceFilter !== 'all' && !availableSources.includes(unmatchedSourceFilter)) {
+      setUnmatchedSourceFilter('all');
+    }
+  }, [selectedDate, data, rtoData, unscannedProducts, availableSources, matchedSourceFilter, unscannedSourceFilter, unmatchedSourceFilter]);
+
   // CSV export function
   const exportToCSV = useCallback(() => {
     try {
       const { enrichedData } = processedData;
 
+      // Helper to get source display name
+      const getSourceDisplayName = (source: string | undefined) => {
+        if (!source) return 'Unknown';
+        if (source.toLowerCase().includes('nimbu')) return 'NimbusPost';
+        if (source.toLowerCase().includes('old') || source.toLowerCase().includes('parcel')) return 'Parcel X';
+        return source;
+      };
+
       // Prepare scanned data
       const scannedData = enrichedData.map((item) => [
+        getSourceDisplayName(item.source),
         item.fulfilledBy || 'Unknown Courier',
         item.barcode || '',
         item.match ? 'Matched' : 'Unmatched',
@@ -423,6 +529,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
 
       // Prepare unscanned data
       const unscannedData = unscannedProducts.map((item) => [
+        getSourceDisplayName(item.source),
         item.fulfilledBy || 'Unknown Courier',
         item.barcode || '',
         'Unscanned',
@@ -630,8 +737,8 @@ export const ReportTable: React.FC<ReportTableProps> = ({
         </CardHeader>
       </div>
       <CardContent className="p-6">
-        {/* Search Bar */}
-        <div className="mb-4">
+        {/* Search Bar and Source Filter */}
+        <div className="mb-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -641,6 +748,22 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               onChange={(e) => setMatchedSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by Source:</label>
+            <Select value={matchedSourceFilter} onValueChange={setMatchedSourceFilter}>
+              <SelectTrigger className="w-full max-w-[180px]">
+                <SelectValue placeholder="All Sources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {availableSources.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="max-h-96 overflow-y-auto">
@@ -655,6 +778,11 @@ export const ReportTable: React.FC<ReportTableProps> = ({
             <TableBody>
               {filteredData.matchedData.map((item, index) => (
                 <TableRow key={index}>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {item.source || 'Unknown'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{item.fulfilledBy || 'Unknown Courier'}</TableCell>
                   <TableCell className="font-mono text-sm">
                     {item.barcode}
@@ -694,8 +822,8 @@ export const ReportTable: React.FC<ReportTableProps> = ({
         </CardHeader>
       </div>
       <CardContent className="p-6">
-        {/* Search Bar */}
-        <div className="mb-4">
+        {/* Search Bar and Source Filter */}
+        <div className="mb-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -705,6 +833,22 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               onChange={(e) => setUnscannedSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by Source:</label>
+            <Select value={unscannedSourceFilter} onValueChange={setUnscannedSourceFilter}>
+              <SelectTrigger className="w-full max-w-[180px]">
+                <SelectValue placeholder="All Sources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {availableSources.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="max-h-96 overflow-y-auto">
@@ -719,28 +863,42 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.unscannedData.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell className="text-center">
-                    {item.fulfilledBy || 'Unknown Courier'}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm text-center">
-                    {item.barcode}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {item.productName || 'Unknown Product'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {item.quantity || 1}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {formatPrice(item.price)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {renderActionButton(item)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredData.unscannedData.map((item, index) => {
+                // Map source to display name for unscanned items
+                const getSourceDisplayName = (source: string | undefined) => {
+                  if (!source) return 'Unknown';
+                  if (source.toLowerCase().includes('nimbu')) return 'NimbusPost';
+                  if (source.toLowerCase().includes('old') || source.toLowerCase().includes('parcel')) return 'Parcel X';
+                  return source;
+                };
+                return (
+                  <TableRow key={index}>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-xs">
+                        {getSourceDisplayName(item.source)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {item.fulfilledBy || 'Unknown Courier'}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-center">
+                      {item.barcode}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {item.productName || 'Unknown Product'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {item.quantity || 1}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {formatPrice(item.price)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {renderActionButton(item)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {filteredData.unscannedData.length === 0 && (
                 <TableRow>
                   <TableCell
@@ -770,8 +928,8 @@ export const ReportTable: React.FC<ReportTableProps> = ({
         </CardHeader>
       </div>
       <CardContent className="p-6">
-        {/* Search Bar */}
-        <div className="mb-4">
+        {/* Search Bar and Source Filter */}
+        <div className="mb-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -781,6 +939,22 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               onChange={(e) => setUnmatchedSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by Source:</label>
+            <Select value={unmatchedSourceFilter} onValueChange={setUnmatchedSourceFilter}>
+              <SelectTrigger className="w-full max-w-[180px]">
+                <SelectValue placeholder="All Sources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {availableSources.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="max-h-96 overflow-y-auto">
@@ -795,6 +969,11 @@ export const ReportTable: React.FC<ReportTableProps> = ({
             <TableBody>
               {filteredData.unmatchedData.map((item, index) => (
                 <TableRow key={index}>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {item.source || 'Unknown'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{item.fulfilledBy || 'Unknown Courier'}</TableCell>
                   <TableCell className="font-mono text-sm">
                     {item.barcode}

@@ -23,18 +23,162 @@ const clearOverallSummaryCache = () => {
   console.log('🗑️ Cleared overall summary cache');
 };
 
+// Helper function to normalize Courier name (Delhivery and XB)
+const normalizeCourier = (courier) => {
+  if (!courier) return 'Unknown Courier';
+  const courierStr = String(courier).trim();
+  
+  // Check if it contains "Delhivery" (case-insensitive)
+  if (courierStr.toLowerCase().includes('delhivery')) {
+    return 'Delhivery';
+  }
+  
+  // Check if it's XB (case-insensitive)
+  if (courierStr.toLowerCase() === 'xb' || courierStr.toLowerCase().includes('xb ')) {
+    return 'XB';
+  }
+  
+  return courierStr; // Return original if no match
+};
+
+// Helper function to process Nimbu sheet (new format)
+const processNimbuSheet = (filePath, date) => {
+  console.log('📊 Processing Nimbu sheet:', filePath);
+  
+  const workbook = XLSX.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const jsonData = XLSX.utils.sheet_to_json(worksheet);
+  
+  const productsByDate = {};
+  const waybillCountsByDate = {};
+  
+  const normalizeDate = (rawValue, fallbackValue) => {
+    const format = (d) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    const tryDate = (val) => {
+      if (!val) return null;
+      if (val instanceof Date && !isNaN(val)) return format(val);
+      if (typeof val === 'number') {
+        // Excel serial date number
+        if (XLSX?.SSF?.parse_date_code) {
+          const parsed = XLSX.SSF.parse_date_code(val);
+          if (parsed) {
+            return format(new Date(parsed.y, parsed.m - 1, parsed.d || 1));
+          }
+        }
+      }
+      const str = String(val).trim();
+      if (!str) return null;
+      const base = str.includes(' ') ? str.split(' ')[0] : str;
+      const ddmmyy = base.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+      if (ddmmyy) {
+        const [, d, m, y] = ddmmyy;
+        const year = y.length === 2 ? `20${y}` : y;
+        return format(new Date(Number(year), Number(m) - 1, Number(d)));
+      }
+      const parsed = new Date(base);
+      if (!isNaN(parsed)) return format(parsed);
+      return null;
+    };
+
+    let normalized = tryDate(rawValue);
+    if (!normalized && fallbackValue) {
+      normalized = tryDate(fallbackValue);
+    }
+    return normalized;
+  };
+
+  jsonData.forEach((row) => {
+    // Extract AWB Number
+    const awbNumber = row['AWB Number'] 
+      ? String(row['AWB Number']).trim() 
+      : null;
+    
+    // Extract RTO Delivered Date
+    const rtoDeliveredDate = row['RTO Delivered Date'];
+    
+    // Extract Courier
+    const courier = normalizeCourier(row['Courier']);
+    
+    if (awbNumber) {
+      // Normalize RTO Delivered Date; fall back to selected upload date if invalid/missing
+      const dateOnly = normalizeDate(rtoDeliveredDate, date);
+      
+      if (!dateOnly) {
+        return; // skip this row due to invalid date
+      }
+
+      if (!productsByDate[dateOnly]) {
+        productsByDate[dateOnly] = [];
+        waybillCountsByDate[dateOnly] = new Set();
+      }
+
+      // Extract product information if available
+      const totalProducts = row['Total Products Count'] || 1;
+      let productName = '';
+      let quantity = 1;
+      let price = 0;
+      
+      // Try to get first product details
+      if (row['Product(1)']) {
+        productName = String(row['Product(1)']).trim();
+        quantity = parseInt(row['Quantity(1)']) || 1;
+        price = parseFloat(String(row['Price(1)']).replace(/[^0-9.-]/g, '')) || 0;
+      }
+
+      // Add to products list
+      productsByDate[dateOnly].push({
+        barcode: awbNumber,
+        productName: productName || 'Product from Nimbu sheet',
+        quantity: quantity,
+        price: price,
+        status: 'pending',
+        orderId: row['Order Id'],
+        orderDate: row['Order Date'],
+        rtsDate: rtoDeliveredDate ? String(rtoDeliveredDate) : 'No RTO Delivered Date',
+        consigneeName: row['Customer Name'],
+        city: row['City'],
+        state: row['State'],
+        pincode: row['Zip Code'],
+        fulfilledBy: courier, // Normalized courier (Delhivery or XB)
+        source: 'NimbusPost', // Mark as from NimbusPost sheet
+      });
+
+      waybillCountsByDate[dateOnly].add(awbNumber);
+    }
+  });
+
+  console.log(`📊 Nimbu sheet processed: ${jsonData.length} rows`);
+  console.log(
+    `📊 Nimbu records with AWB: ${Object.values(productsByDate).reduce(
+      (sum, products) => sum + products.length,
+      0,
+    )}`,
+  );
+
+  return { productsByDate, waybillCountsByDate };
+};
+
 // Upload and parse Excel file
 const uploadRTOData = async (req, res) => {
   try {
+    // Support both single file (req.file) and multiple files (req.files)
+    const files = req.files || (req.file ? [req.file] : []);
+    
     console.log('📤 Upload request received:', {
-      hasFile: !!req.file,
-      filePath: req.file?.path,
-      fileName: req.file?.originalname,
-      fileSize: req.file?.size,
+      hasFiles: files.length > 0,
+      fileCount: files.length,
+      files: files.map(f => ({ name: f.originalname, size: f.size })),
       body: req.body,
     });
 
-    if (!req.file) {
+    if (files.length === 0) {
       console.error('❌ No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -58,31 +202,106 @@ const uploadRTOData = async (req, res) => {
       });
     }
 
-    // Check if file exists before processing
+    // Check if files exist before processing
     const fs = require('fs');
-    if (!fs.existsSync(req.file.path)) {
-      console.error('❌ File does not exist at path:', req.file.path);
-      return res.status(500).json({
-        error: 'Uploaded file not found',
-        details: `File path: ${req.file.path}`,
-      });
+    for (const file of files) {
+      if (!fs.existsSync(file.path)) {
+        console.error('❌ File does not exist at path:', file.path);
+        return res.status(500).json({
+          error: 'Uploaded file not found',
+          details: `File path: ${file.path}`,
+        });
+      }
     }
 
-    console.log('✅ File exists, proceeding with Excel parsing...');
+    console.log('✅ Files exist, proceeding with Excel parsing...');
 
-    // Parse Excel file
-    const workbook = XLSX.readFile(req.file.path);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-    // Extract barcodes and product data, grouping by RTS Date
-    const productsByDate = {};
-    const waybillCountsByDate = {}; // Track unique waybills per date
+    // Merge products from all files
+    const allProductsByDate = {};
+    const allWaybillCountsByDate = {};
+    const fileSources = [];
     let invalidDateCount = 0;
 
-    // Helpers to robustly read values from various possible headers
-    const getFirst = (obj, keys) => {
+    // Helper function to detect Nimbu sheet format by checking column structure
+    const detectNimbuSheet = (filePath) => {
+      try {
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // Check if first row (headers) contains Nimbu-specific columns
+        if (jsonData.length > 0) {
+          const headers = jsonData[0];
+          const headerString = headers.join(' ').toLowerCase();
+          
+          // Check for key Nimbu sheet columns
+          const hasAWBNumber = headerString.includes('awb number');
+          const hasRTODeliveredDate = headerString.includes('rto delivered date');
+          const hasCourier = headerString.includes('courier');
+          
+          // If all three key columns are present, it's a Nimbu sheet
+          if (hasAWBNumber && hasRTODeliveredDate && hasCourier) {
+            return true;
+          }
+        }
+        return false;
+      } catch (error) {
+        console.warn('Error detecting sheet format:', error);
+        return false;
+      }
+    };
+
+    // Process each file
+    for (const file of files) {
+      // Detect sheet format by structure, not filename
+      const isNimbuSheet = detectNimbuSheet(file.path);
+      
+      if (isNimbuSheet) {
+        // Process Nimbu sheet (new format)
+        console.log('📊 Processing Nimbu sheet:', file.originalname);
+        const { productsByDate: nimbuProducts, waybillCountsByDate: nimbuWaybills } = 
+          processNimbuSheet(file.path, date);
+        
+        // Merge Nimbu data
+        for (const [rtsDate, products] of Object.entries(nimbuProducts)) {
+          if (!allProductsByDate[rtsDate]) {
+            allProductsByDate[rtsDate] = [];
+            allWaybillCountsByDate[rtsDate] = new Set();
+          }
+          
+          // Add products, avoiding duplicates by AWB
+          const existingAwbs = new Set(
+            allProductsByDate[rtsDate].map(p => p.barcode.toString().toLowerCase())
+          );
+          
+          products.forEach(product => {
+            const awbLower = product.barcode.toString().toLowerCase();
+            if (!existingAwbs.has(awbLower)) {
+              allProductsByDate[rtsDate].push(product);
+              existingAwbs.add(awbLower);
+            }
+          });
+          
+          // Merge waybill counts
+          nimbuWaybills[rtsDate]?.forEach(awb => 
+            allWaybillCountsByDate[rtsDate].add(awb)
+          );
+        }
+        
+        fileSources.push({ name: file.originalname, type: 'NimbusPost' });
+      } else {
+        // Process old sheet format
+        console.log('📊 Processing old sheet format:', file.originalname);
+        const workbook = XLSX.readFile(file.path);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        // Extract barcodes and product data, grouping by RTS Date
+
+        // Helpers to robustly read values from various possible headers
+        const getFirst = (obj, keys) => {
       for (const key of keys) {
         if (
           obj.hasOwnProperty(key) &&
@@ -93,10 +312,10 @@ const uploadRTOData = async (req, res) => {
           return obj[key];
         }
       }
-      return undefined;
-    };
+          return undefined;
+        };
 
-    const normalizeDate = (rawValue, fallbackValue) => {
+        const normalizeDate = (rawValue, fallbackValue) => {
       const format = (d) => {
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -147,24 +366,24 @@ const uploadRTOData = async (req, res) => {
         normalized = tryDate(fallbackValue);
       }
 
-      return normalized;
-    };
+          return normalized;
+        };
 
-    const toInt = (value, fallback = 1) => {
+        const toInt = (value, fallback = 1) => {
       if (value === undefined || value === null || value === '')
         return fallback;
       const n = parseInt(String(value).replace(/[^0-9-]/g, ''), 10);
-      return Number.isFinite(n) ? n : fallback;
-    };
+          return Number.isFinite(n) ? n : fallback;
+        };
 
-    const toPrice = (value, fallback = 0) => {
+        const toPrice = (value, fallback = 0) => {
       if (value === undefined || value === null || value === '')
         return fallback;
       const n = parseFloat(String(value).replace(/[^0-9.-]/g, ''));
-      return Number.isFinite(n) ? n : fallback;
-    };
+          return Number.isFinite(n) ? n : fallback;
+        };
 
-    jsonData.forEach((row) => {
+        jsonData.forEach((row) => {
       // Waybill / Barcode
       const waybillNumber = (
         getFirst(row, [
@@ -222,8 +441,8 @@ const uploadRTOData = async (req, res) => {
       ]);
       const rtsDate = rtsDateValue ? String(rtsDateValue) : undefined;
 
-      // Courier / Fulfilled By
-      const fulfilledBy = (
+      // Courier / Fulfilled By - normalize it
+      const fulfilledBy = normalizeCourier(
         getFirst(row, [
           'Fulfilled By',
           'Courier',
@@ -231,7 +450,7 @@ const uploadRTOData = async (req, res) => {
           'CourierName',
           'Shipped By',
         ]) || 'Unknown Courier'
-      ).toString();
+      );
 
       // Include all records that have a waybill number, regardless of RTS date
       if (waybillNumber) {
@@ -243,36 +462,55 @@ const uploadRTOData = async (req, res) => {
           return; // skip this row due to invalid date
         }
 
-        if (!productsByDate[dateOnly]) {
-          productsByDate[dateOnly] = [];
-          waybillCountsByDate[dateOnly] = new Set(); // Track unique waybills
+        if (!allProductsByDate[dateOnly]) {
+          allProductsByDate[dateOnly] = [];
+          allWaybillCountsByDate[dateOnly] = new Set(); // Track unique waybills
         }
 
-        // Add to products list
-        productsByDate[dateOnly].push({
-          barcode: waybillNumber,
-          productName,
-          quantity,
-          price,
-          status: 'pending',
-          orderId: row['OrderId'],
-          orderDate: row['Order Date'],
-          rtsDate: rtsDate || 'No RTS Date',
-          consigneeName: row['Consignee Name'],
-          city: row['City'],
-          state: row['State'],
-          pincode: row['Pincode'],
-          fulfilledBy: fulfilledBy,
-        });
+        // Check if this AWB already exists (from Nimbu sheet)
+        const existingAwbs = new Set(
+          allProductsByDate[dateOnly].map(p => p.barcode.toString().toLowerCase())
+        );
+        const awbLower = waybillNumber.toString().toLowerCase();
+        
+        // Only add if not already present (Nimbu sheet takes precedence for duplicates)
+        if (!existingAwbs.has(awbLower)) {
+          // Add to products list
+          allProductsByDate[dateOnly].push({
+            barcode: waybillNumber,
+            productName,
+            quantity,
+            price,
+            status: 'pending',
+            orderId: row['OrderId'],
+            orderDate: row['Order Date'],
+            rtsDate: rtsDate || 'No RTS Date',
+            consigneeName: row['Consignee Name'],
+            city: row['City'],
+            state: row['State'],
+            pincode: row['Pincode'],
+            fulfilledBy: fulfilledBy, // Normalized courier
+            source: 'Parcel X', // Mark as from Parcel X sheet
+          });
 
-        // Track unique waybills
-        waybillCountsByDate[dateOnly].add(waybillNumber);
-      }
-    });
+          // Track unique waybills
+          allWaybillCountsByDate[dateOnly].add(waybillNumber);
+          }
+        }
+      });
+      
+      fileSources.push({ name: file.originalname, type: 'Parcel X' });
+    }
+  }
 
-    console.log(`Total records processed: ${jsonData.length}`);
+    // Use merged data
+    const productsByDate = allProductsByDate;
+    const waybillCountsByDate = allWaybillCountsByDate;
+
+    console.log(`📊 Total files processed: ${files.length}`);
+    console.log(`📊 File sources:`, fileSources);
     console.log(
-      `Records with waybill numbers: ${Object.values(productsByDate).reduce(
+      `📊 Total records with waybill numbers: ${Object.values(productsByDate).reduce(
         (sum, products) => sum + products.length,
         0,
       )}`,
@@ -281,7 +519,7 @@ const uploadRTOData = async (req, res) => {
       console.warn(`⚠️ Skipped ${invalidDateCount} rows due to invalid/missing RTS dates`);
     }
     console.log(
-      'Products grouped by RTS Date:',
+      '📊 Products grouped by RTS Date:',
       Object.keys(productsByDate).map(
         (date) =>
           `${date}: ${productsByDate[date].length} products, ${waybillCountsByDate[date].size} unique waybills`,
@@ -299,7 +537,8 @@ const uploadRTOData = async (req, res) => {
           defaults: {
             barcodes: products,
             uploadInfo: {
-              originalFileName: req.file.originalname,
+              originalFileNames: files.map(f => f.originalname),
+              fileSources: fileSources,
               uploadDate: new Date(),
               totalRecords: waybillCountsByDate[rtsDate].size, // Use unique waybill count
               totalProducts: products.length, // Keep product count for reference
@@ -309,17 +548,82 @@ const uploadRTOData = async (req, res) => {
         });
 
         if (!created) {
-          // Update existing data
+          // Merge with existing data instead of replacing
+          // Get existing barcodes
+          let existingBarcodes = existingData.barcodes || [];
+          if (typeof existingBarcodes === 'string') {
+            try {
+              existingBarcodes = JSON.parse(existingBarcodes);
+            } catch (error) {
+              console.warn('Error parsing existing barcodes:', error);
+              existingBarcodes = [];
+            }
+          }
+          if (!Array.isArray(existingBarcodes)) {
+            existingBarcodes = [];
+          }
+
+          // Create a map of existing barcodes by AWB (lowercase) for quick lookup
+          const existingBarcodeMap = new Map();
+          existingBarcodes.forEach(item => {
+            const awb = item.barcode?.toString().toLowerCase();
+            if (awb) {
+              existingBarcodeMap.set(awb, item);
+            }
+          });
+
+          // Merge new products with existing ones
+          // New products (from current upload) take precedence for duplicates
+          const mergedBarcodes = [...existingBarcodes];
+          const mergedAwbSet = new Set(
+            mergedBarcodes.map(b => b.barcode?.toString().toLowerCase()).filter(Boolean)
+          );
+
+          // Add new products, avoiding duplicates
+          products.forEach(newProduct => {
+            const awb = newProduct.barcode?.toString().toLowerCase();
+            if (awb && !mergedAwbSet.has(awb)) {
+              mergedBarcodes.push(newProduct);
+              mergedAwbSet.add(awb);
+            } else if (awb && mergedAwbSet.has(awb)) {
+              // If duplicate, replace with new product (Nimbu/new sheet takes precedence)
+              const existingIndex = mergedBarcodes.findIndex(
+                b => b.barcode?.toString().toLowerCase() === awb
+              );
+              if (existingIndex !== -1) {
+                mergedBarcodes[existingIndex] = newProduct;
+              }
+            }
+          });
+
+          // Recalculate unique waybill count from merged data
+          const mergedWaybillSet = new Set(
+            mergedBarcodes.map(b => b.barcode?.toString().toLowerCase()).filter(Boolean)
+          );
+
+          // Update existing data with merged barcodes
           await existingData.update({
-            barcodes: products,
+            barcodes: mergedBarcodes,
             uploadInfo: {
-              originalFileName: req.file.originalname,
+              originalFileNames: [
+                ...(existingData.uploadInfo?.originalFileNames || []),
+                ...files.map(f => f.originalname)
+              ],
+              fileSources: [
+                ...(existingData.uploadInfo?.fileSources || []),
+                ...fileSources
+              ],
               uploadDate: new Date(),
-              totalRecords: waybillCountsByDate[rtsDate].size, // Use unique waybill count
-              totalProducts: products.length, // Keep product count for reference
+              totalRecords: mergedWaybillSet.size, // Use unique waybill count from merged data
+              totalProducts: mergedBarcodes.length, // Keep product count for reference
               selectedDate: date, // The date selected during upload
             },
           });
+
+          // Update the products array for response
+          products.length = 0;
+          products.push(...mergedBarcodes);
+          waybillCountsByDate[rtsDate] = mergedWaybillSet;
         }
 
         uploadResults.push({
@@ -343,16 +647,18 @@ const uploadRTOData = async (req, res) => {
       0,
     );
 
-    // Clean up uploaded file after successful processing
+    // Clean up uploaded files after successful processing
     try {
       const fs = require('fs');
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-        console.log('🗑️ Cleaned up uploaded file:', req.file.path);
+      for (const file of files) {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+          console.log('🗑️ Cleaned up uploaded file:', file.path);
+        }
       }
     } catch (cleanupError) {
       console.warn(
-        '⚠️ Failed to clean up uploaded file:',
+        '⚠️ Failed to clean up uploaded files:',
         cleanupError.message,
       );
     }

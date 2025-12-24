@@ -1,13 +1,32 @@
 const { Sequelize } = require("sequelize");
+const path = require("path");
+
+// Load environment variables - load server/.env first, then root .env to override
+// This ensures root .env (new credentials) takes precedence
+require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Load server/.env first
+require('dotenv').config({ path: path.join(__dirname, '../../.env'), override: true }); // Root .env overrides
 
 // Create Sequelize instance
+const dbName = process.env.DB_NAME || "rto_db";
+const dbUser = process.env.DB_USER || "rto";
+const dbPassword = process.env.DB_PASSWORD || "Kalbazaar@177";
+const dbHost = process.env.DB_HOST || "31.97.61.5";
+const dbPort = process.env.DB_PORT || 3306;
+
+// Log which credentials are being used (without password)
+console.log("🔐 Database Configuration:");
+console.log(`   Host: ${dbHost}`);
+console.log(`   Port: ${dbPort}`);
+console.log(`   Database: ${dbName}`);
+console.log(`   User: ${dbUser}`);
+
 const sequelize = new Sequelize(
-  process.env.DB_NAME || "rto_db",
-  process.env.DB_USER || "rto",
-  process.env.DB_PASSWORD || "Kalbazaar@177",
+  dbName,
+  dbUser,
+  dbPassword,
   {
-    host: process.env.DB_HOST || "31.97.61.5",
-    port: process.env.DB_PORT || 3306,
+    host: dbHost,
+    port: dbPort,
     dialect: "mysql",
     pool: {
       max: parseInt(process.env.DB_MAX_CONNECTIONS) || 10,
