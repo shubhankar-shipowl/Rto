@@ -452,14 +452,17 @@ const uploadRTOData = async (req, res) => {
         ]) || 'Unknown Courier'
       );
 
-      // Include all records that have a waybill number, regardless of RTS date
+      // Include all records that have a waybill number
+      // For Parcel X sheet: Only include rows that have a valid RTS Date (skip rows without RTS Date)
       if (waybillNumber) {
-        // Normalize RTS date; fall back to selected upload date if invalid/missing
-        const dateOnly = normalizeDate(rtsDate, date);
+        // Normalize RTS date - DO NOT use fallback date for Parcel X sheet
+        // If RTS Date is missing or invalid, skip this row entirely
+        const dateOnly = normalizeDate(rtsDate, null); // Pass null instead of date to prevent fallback
 
         if (!dateOnly) {
           invalidDateCount += 1;
-          return; // skip this row due to invalid date
+          console.log(`⚠️ Skipping row with waybill ${waybillNumber} - no valid RTS Date found`);
+          return; // skip this row due to missing/invalid RTS date
         }
 
         if (!allProductsByDate[dateOnly]) {
@@ -516,7 +519,7 @@ const uploadRTOData = async (req, res) => {
       )}`,
     );
     if (invalidDateCount > 0) {
-      console.warn(`⚠️ Skipped ${invalidDateCount} rows due to invalid/missing RTS dates`);
+      console.warn(`⚠️ Skipped ${invalidDateCount} rows from Parcel X sheet due to missing/invalid RTS Date (rows without RTS Date are not included)`);
     }
     console.log(
       '📊 Products grouped by RTS Date:',
@@ -665,52 +668,219 @@ const uploadRTOData = async (req, res) => {
 
     console.log('✅ Upload completed successfully');
 
-    // Check for reconcilable unmatched scans
+    // Automatically reconcile unmatched scans that match the newly uploaded data
     const reconcilableScans = [];
+    const autoReconciledScans = [];
     try {
       for (const [rtsDate, products] of Object.entries(productsByDate)) {
-        // Get all barcodes for this date
-        const barcodeSet = new Set(
-          products.map((p) => p.barcode.toString().toLowerCase()),
-        );
+        // Get all barcodes for this date (only items with valid RTS dates)
+        const barcodeSet = new Set();
+        const productsMap = new Map();
+        
+        products.forEach((p) => {
+          // Only include items with valid RTS dates
+          const rtsDateValue = p.rtsDate;
+          const hasValidRTSDate = rtsDateValue && 
+                                  rtsDateValue !== 'No RTS Date' && 
+                                  rtsDateValue !== 'No RTO Delivered Date' && 
+                                  rtsDateValue !== 'null' &&
+                                  rtsDateValue !== 'undefined' &&
+                                  rtsDateValue !== '' &&
+                                  rtsDateValue.trim() !== '';
+          
+          if (hasValidRTSDate && p.barcode) {
+            const barcodeKey = p.barcode.toString().toLowerCase();
+            barcodeSet.add(barcodeKey);
+            productsMap.set(barcodeKey, p);
+          }
+        });
 
-        // Find unmatched scans from other dates that match these barcodes
+        // Find unmatched scans that match these barcodes
+        // Check both same date (for same-day reconciliation) and different dates
         const unmatchedScans = await ScanResult.findAll({
           where: {
             match: false,
-            date: { [Op.ne]: rtsDate }, // From different dates
           },
         });
 
         for (const scan of unmatchedScans) {
-          if (
-            barcodeSet.has(scan.barcode.toString().toLowerCase()) &&
-            products.find(
-              (p) =>
-                p.barcode.toString().toLowerCase() ===
-                scan.barcode.toString().toLowerCase(),
-            )
-          ) {
-            const matchedProduct = products.find(
-              (p) =>
-                p.barcode.toString().toLowerCase() ===
-                scan.barcode.toString().toLowerCase(),
-            );
-            reconcilableScans.push({
-              scanId: scan.id,
-              barcode: scan.barcode,
-              scannedDate: scan.date,
-              targetDate: rtsDate,
-              productName: matchedProduct.productName,
-              quantity: matchedProduct.quantity,
-              price: matchedProduct.price,
-              scannedTimestamp: scan.timestamp,
-            });
+          const scanBarcodeKey = scan.barcode?.toString().toLowerCase();
+          if (scanBarcodeKey && barcodeSet.has(scanBarcodeKey)) {
+            const matchedProduct = productsMap.get(scanBarcodeKey);
+            if (matchedProduct) {
+              // Automatically reconcile this scan
+              try {
+                // Get or create RTO data for the target date
+                let targetRtoData = await RTOData.findOne({
+                  where: { date: rtsDate },
+                });
+
+                if (!targetRtoData) {
+                  // This shouldn't happen as we just created it, but handle it
+                  continue;
+                }
+
+                // Parse barcodes
+                let targetBarcodes = targetRtoData.barcodes || [];
+                if (typeof targetBarcodes === 'string') {
+                  try {
+                    targetBarcodes = JSON.parse(targetBarcodes);
+                  } catch (error) {
+                    console.error('Error parsing barcodes during auto-reconciliation:', error);
+                    continue;
+                  }
+                }
+
+                if (!Array.isArray(targetBarcodes)) {
+                  continue;
+                }
+
+                // Use transaction for atomic operations
+                const transaction = await sequelize.transaction();
+
+                try {
+                  // Update product status in RTO data
+                  const productIndex = targetBarcodes.findIndex(
+                    (item) =>
+                      item.barcode?.toString().toLowerCase() === scanBarcodeKey,
+                  );
+
+                  if (productIndex !== -1) {
+                    targetBarcodes[productIndex].status = 'matched';
+                    targetBarcodes[productIndex].scannedAt = new Date();
+                  }
+
+                  // Update reconciliation summary for target date
+                  let targetSummary = targetRtoData.reconciliationSummary || {
+                    totalScanned: 0,
+                    matched: 0,
+                    unmatched: 0,
+                  };
+
+                  if (typeof targetSummary === 'string') {
+                    try {
+                      targetSummary = JSON.parse(targetSummary);
+                    } catch (error) {
+                      targetSummary = { totalScanned: 0, matched: 0, unmatched: 0 };
+                    }
+                  }
+
+                  targetSummary.totalScanned += 1;
+                  targetSummary.matched += 1;
+
+                  // Update reconciliation summary for original date (if different)
+                  let originalSummary = null;
+                  if (scan.date !== rtsDate) {
+                    const originalRtoData = await RTOData.findOne({
+                      where: { date: scan.date },
+                      transaction,
+                    });
+
+                    if (originalRtoData) {
+                      originalSummary = originalRtoData.reconciliationSummary || {
+                        totalScanned: 0,
+                        matched: 0,
+                        unmatched: 0,
+                      };
+
+                      if (typeof originalSummary === 'string') {
+                        try {
+                          originalSummary = JSON.parse(originalSummary);
+                        } catch (error) {
+                          originalSummary = { totalScanned: 0, matched: 0, unmatched: 0 };
+                        }
+                      }
+
+                      originalSummary.totalScanned = Math.max(0, originalSummary.totalScanned - 1);
+                      originalSummary.unmatched = Math.max(0, originalSummary.unmatched - 1);
+
+                      await RTOData.update(
+                        {
+                          reconciliationSummary: originalSummary,
+                        },
+                        {
+                          where: { id: originalRtoData.id },
+                          transaction,
+                        },
+                      );
+                    }
+                  }
+
+                  // Delete the unmatched scan
+                  await ScanResult.destroy({
+                    where: { id: scan.id },
+                    transaction,
+                  });
+
+                  // Create new matched scan for target date
+                  await ScanResult.create(
+                    {
+                      barcode: scan.barcode,
+                      date: rtsDate,
+                      match: true,
+                      productName: matchedProduct.productName,
+                      quantity: matchedProduct.quantity,
+                      price: matchedProduct.price,
+                      message: scan.date !== rtsDate 
+                        ? `Auto-reconciled from ${scan.date}` 
+                        : 'Auto-reconciled (data uploaded after scan)',
+                      timestamp: scan.timestamp, // Keep original scan timestamp
+                      isFromDifferentDate: scan.date !== rtsDate,
+                      originalDate: scan.date !== rtsDate ? scan.date : null,
+                    },
+                    { transaction },
+                  );
+
+                  // Update RTO data for target date
+                  await RTOData.update(
+                    {
+                      barcodes: targetBarcodes,
+                      reconciliationSummary: targetSummary,
+                    },
+                    {
+                      where: { id: targetRtoData.id },
+                      transaction,
+                    },
+                  );
+
+                  await transaction.commit();
+
+                  // Track auto-reconciled scan
+                  autoReconciledScans.push({
+                    scanId: scan.id,
+                    barcode: scan.barcode,
+                    scannedDate: scan.date,
+                    targetDate: rtsDate,
+                    productName: matchedProduct.productName,
+                  });
+
+                  console.log(`✅ Auto-reconciled scan: ${scan.barcode} from ${scan.date} to ${rtsDate}`);
+                } catch (error) {
+                  await transaction.rollback();
+                  console.error(`❌ Error auto-reconciling scan ${scan.id}:`, error);
+                  // Continue with other scans even if one fails
+                }
+              } catch (error) {
+                console.error(`❌ Error during auto-reconciliation for scan ${scan.id}:`, error);
+                // Continue with other scans
+              }
+            }
           }
         }
       }
+
+      if (autoReconciledScans.length > 0) {
+        console.log(`✅ Auto-reconciled ${autoReconciledScans.length} unmatched scan(s)`);
+        // Clear cache for affected dates
+        const affectedDates = new Set([
+          ...autoReconciledScans.map(s => s.scannedDate),
+          ...autoReconciledScans.map(s => s.targetDate),
+        ]);
+        affectedDates.forEach(date => clearCacheForDate(date));
+        clearOverallSummaryCache();
+      }
     } catch (reconcileError) {
-      console.error('Error checking for reconcilable scans:', reconcileError);
+      console.error('Error during auto-reconciliation:', reconcileError);
       // Don't fail the upload if reconciliation check fails
     }
 
@@ -723,7 +893,8 @@ const uploadRTOData = async (req, res) => {
       totalRecords: totalWaybills, // Use unique waybill count
       totalProducts: totalProducts, // Keep product count for reference
       uploadResults: uploadResults,
-      reconcilableScans: reconcilableScans, // Scans that can be moved to matched
+      reconcilableScans: reconcilableScans, // Scans that can be moved to matched (legacy, for manual reconciliation)
+      autoReconciledScans: autoReconciledScans, // Scans that were automatically reconciled
       summary: {
         totalDates: Object.keys(productsByDate).length,
         totalWaybills: totalWaybills,
@@ -939,8 +1110,24 @@ const scanBarcode = async (req, res) => {
     }
 
     // Optimized barcode matching using Map for O(1) lookup with case-insensitive comparison
+    // Only include items that have valid RTS dates
     const barcodeMap = new Map();
     barcodes.forEach((item, index) => {
+      // Check if item has a valid RTS date
+      const rtsDate = item.rtsDate;
+      const hasValidRTSDate = rtsDate && 
+                              rtsDate !== 'No RTS Date' && 
+                              rtsDate !== 'No RTO Delivered Date' && 
+                              rtsDate !== 'null' &&
+                              rtsDate !== 'undefined' &&
+                              rtsDate !== '' &&
+                              rtsDate.trim() !== '';
+
+      // Skip items without valid RTS dates - they cannot be scanned
+      if (!hasValidRTSDate) {
+        return;
+      }
+
       // Store both original and lowercase versions for case-insensitive lookup
       const barcodeKey = item.barcode.toString().toLowerCase();
       barcodeMap.set(barcodeKey, { ...item, index });
@@ -1669,9 +1856,25 @@ const getCourierCounts = async (req, res) => {
 
     // Count unique waybills per courier (not all products)
     // Use a Map to track unique barcodes per courier
+    // Only include items that have valid RTS dates
     const courierWaybills = {};
 
     barcodes.forEach((item) => {
+      // Check if item has a valid RTS date
+      const rtsDate = item.rtsDate;
+      const hasValidRTSDate = rtsDate && 
+                              rtsDate !== 'No RTS Date' && 
+                              rtsDate !== 'No RTO Delivered Date' && 
+                              rtsDate !== 'null' &&
+                              rtsDate !== 'undefined' &&
+                              rtsDate !== '' &&
+                              rtsDate.trim() !== '';
+
+      // Skip items without valid RTS dates
+      if (!hasValidRTSDate) {
+        return;
+      }
+
       const courier = item.fulfilledBy || 'Unknown';
       const barcode = item.barcode;
 

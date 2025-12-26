@@ -241,10 +241,26 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
         if (rtoData.barcodes && Array.isArray(rtoData.barcodes)) {
           // Count unique waybills - same logic as courier counts
           // This ensures Total Available matches the sum of courier distribution
+          // Only include items that have valid RTS dates
           const uniqueWaybills = new Set();
           const allBarcodes = [];
 
           rtoData.barcodes.forEach((item: any, index: number) => {
+            // Check if item has a valid RTS date
+            const rtsDate = item.rtsDate;
+            const hasValidRTSDate = rtsDate && 
+                                    rtsDate !== 'No RTS Date' && 
+                                    rtsDate !== 'No RTO Delivered Date' && 
+                                    rtsDate !== 'null' &&
+                                    rtsDate !== 'undefined' &&
+                                    rtsDate !== '' &&
+                                    rtsDate.trim() !== '';
+
+            // Skip items without valid RTS dates
+            if (!hasValidRTSDate) {
+              return;
+            }
+
             const barcode = item.barcode;
             if (barcode) {
               allBarcodes.push(barcode);

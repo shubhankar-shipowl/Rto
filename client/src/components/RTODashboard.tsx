@@ -370,9 +370,25 @@ export const RTODashboard: React.FC = () => {
         }
         
         // Fallback: Count unique waybills from barcodes array if courier counts not available
+        // Only include items that have valid RTS dates
         if (totalAvailable === 0 && data.barcodes && Array.isArray(data.barcodes)) {
           const uniqueWaybills = new Set();
           data.barcodes.forEach((item: any) => {
+            // Check if item has a valid RTS date
+            const rtsDate = item.rtsDate;
+            const hasValidRTSDate = rtsDate && 
+                                    rtsDate !== 'No RTS Date' && 
+                                    rtsDate !== 'No RTO Delivered Date' && 
+                                    rtsDate !== 'null' &&
+                                    rtsDate !== 'undefined' &&
+                                    rtsDate !== '' &&
+                                    rtsDate.trim() !== '';
+
+            // Skip items without valid RTS dates
+            if (!hasValidRTSDate) {
+              return;
+            }
+
             const barcode = item.barcode;
             if (barcode) {
               uniqueWaybills.add(barcode.toString().toLowerCase());
@@ -577,17 +593,41 @@ export const RTODashboard: React.FC = () => {
       return;
     }
 
-    // Get scanned barcodes
+    // Get scanned barcodes (normalize to lowercase for case-insensitive comparison)
     const scannedBarcodes = new Set(
-      reportsScanResults.map((result) => result.barcode),
+      reportsScanResults
+        .map((result) => result.barcode?.toString().toLowerCase())
+        .filter(Boolean), // Remove any undefined/null values
     );
 
     // Find products that haven't been scanned
-    const unscanned = reportsRTOData.filter(
-      (product) => product.barcode && !scannedBarcodes.has(product.barcode),
-    );
+    // Only include items that have valid RTS dates
+    const unscanned = reportsRTOData.filter((product) => {
+      // Check if item has a valid RTS date
+      const rtsDate = product.rtsDate;
+      const hasValidRTSDate = rtsDate && 
+                              rtsDate !== 'No RTS Date' && 
+                              rtsDate !== 'No RTO Delivered Date' && 
+                              rtsDate !== 'null' &&
+                              rtsDate !== 'undefined' &&
+                              rtsDate !== '' &&
+                              rtsDate.trim() !== '';
+
+      if (!hasValidRTSDate || !product.barcode) {
+        return false;
+      }
+
+      // Normalize barcode to lowercase for case-insensitive comparison
+      const productBarcode = product.barcode.toString().toLowerCase();
+      
+      // Only include items with valid RTS dates that haven't been scanned
+      return !scannedBarcodes.has(productBarcode);
+    });
 
     console.log('📊 Calculated unscanned products:', unscanned.length);
+    console.log('📊 Total RTO data items:', reportsRTOData.length);
+    console.log('📊 Total scanned barcodes:', scannedBarcodes.size);
+    console.log('📊 Scan results count:', reportsScanResults.length);
     setReportsUnscannedProducts(unscanned);
   }, [reportsRTOData, reportsScanResults]);
 
