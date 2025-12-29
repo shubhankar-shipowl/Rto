@@ -6,7 +6,7 @@ const path = require("path");
 require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Load server/.env first
 require('dotenv').config({ path: path.join(__dirname, '../../.env'), override: true }); // Root .env overrides
 
-// Create Sequelize instance
+// Create Sequelize instance first
 const dbName = process.env.DB_NAME || "rto_db";
 const dbUser = process.env.DB_USER || "rto";
 const dbPassword = process.env.DB_PASSWORD || "Kalbazaar@177";
@@ -72,6 +72,12 @@ const connectDB = async () => {
       console.log('✅ Database already connected, reusing connection');
       return sequelize;
     }
+
+    // Import models after sequelize is created
+    require('../models/User');
+    require('../models/RTOData');
+    require('../models/ScanResult');
+    require('../models/Complaint');
 
     await sequelize.authenticate();
     isConnected = true;
