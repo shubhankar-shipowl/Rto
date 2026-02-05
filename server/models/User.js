@@ -1,9 +1,9 @@
-const { DataTypes } = require("sequelize");
-const bcrypt = require("bcryptjs");
-const { sequelize } = require("../src/database");
+const { DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
+const { sequelize } = require('../src/database');
 
 const User = sequelize.define(
-  "User",
+  'User',
   {
     id: {
       type: DataTypes.INTEGER,
@@ -13,7 +13,6 @@ const User = sequelize.define(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: {
         notEmpty: true,
         len: [3, 50],
@@ -35,21 +34,21 @@ const User = sequelize.define(
       },
     },
     role: {
-      type: DataTypes.ENUM("admin", "user"),
+      type: DataTypes.ENUM('admin', 'user'),
       allowNull: false,
-      defaultValue: "user",
+      defaultValue: 'user',
     },
   },
   {
-    tableName: "users",
+    tableName: 'users',
     timestamps: true,
     indexes: [
       {
         unique: true,
-        fields: ["username"],
+        fields: ['username'],
       },
       {
-        fields: ["role"],
+        fields: ['role'],
       },
     ],
     hooks: {
@@ -62,13 +61,13 @@ const User = sequelize.define(
       },
       // Hash password before updating user (if password changed)
       beforeUpdate: async (user) => {
-        if (user.changed("password")) {
+        if (user.changed('password')) {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
         }
       },
     },
-  }
+  },
 );
 
 // Instance method to compare password
@@ -84,4 +83,3 @@ User.prototype.toJSON = function () {
 };
 
 module.exports = User;
-
