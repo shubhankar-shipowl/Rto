@@ -551,79 +551,49 @@ const uploadRTOData = async (req, res) => {
         });
 
         if (!created) {
-          // Merge with existing data instead of replacing
-          // Get existing barcodes
+          // Source-specific replace: only replace barcodes from uploaded sources, keep others
+          const uploadedSources = new Set(fileSources.map(f => f.type));
+          console.log(`🔄 Replacing data for ${rtsDate} - sources: ${[...uploadedSources].join(', ')}`);
+
           let existingBarcodes = existingData.barcodes || [];
           if (typeof existingBarcodes === 'string') {
-            try {
-              existingBarcodes = JSON.parse(existingBarcodes);
-            } catch (error) {
-              console.warn('Error parsing existing barcodes:', error);
-              existingBarcodes = [];
-            }
+            try { existingBarcodes = JSON.parse(existingBarcodes); } catch (e) { existingBarcodes = []; }
           }
-          if (!Array.isArray(existingBarcodes)) {
-            existingBarcodes = [];
-          }
+          if (!Array.isArray(existingBarcodes)) existingBarcodes = [];
 
-          // Create a map of existing barcodes by AWB (lowercase) for quick lookup
-          const existingBarcodeMap = new Map();
-          existingBarcodes.forEach(item => {
-            const awb = item.barcode?.toString().toLowerCase();
-            if (awb) {
-              existingBarcodeMap.set(awb, item);
-            }
-          });
+          // Keep barcodes from sources NOT in this upload
+          const keptBarcodes = existingBarcodes.filter(b => !uploadedSources.has(b.source));
+          // Combine: kept old + new upload
+          const mergedBarcodes = [...keptBarcodes, ...products];
 
-          // Merge new products with existing ones
-          // New products (from current upload) take precedence for duplicates
-          const mergedBarcodes = [...existingBarcodes];
-          const mergedAwbSet = new Set(
-            mergedBarcodes.map(b => b.barcode?.toString().toLowerCase()).filter(Boolean)
-          );
-
-          // Add new products, avoiding duplicates
-          products.forEach(newProduct => {
-            const awb = newProduct.barcode?.toString().toLowerCase();
-            if (awb && !mergedAwbSet.has(awb)) {
-              mergedBarcodes.push(newProduct);
-              mergedAwbSet.add(awb);
-            } else if (awb && mergedAwbSet.has(awb)) {
-              // If duplicate, replace with new product (Nimbu/new sheet takes precedence)
-              const existingIndex = mergedBarcodes.findIndex(
-                b => b.barcode?.toString().toLowerCase() === awb
-              );
-              if (existingIndex !== -1) {
-                mergedBarcodes[existingIndex] = newProduct;
-              }
-            }
-          });
-
-          // Recalculate unique waybill count from merged data
           const mergedWaybillSet = new Set(
             mergedBarcodes.map(b => b.barcode?.toString().toLowerCase()).filter(Boolean)
           );
 
-          // Update existing data with merged barcodes
+          // Update fileSources: keep old sources not in this upload, add new ones
+          const existingFileSources = existingData.uploadInfo?.fileSources || [];
+          const keptFileSources = existingFileSources.filter(f => !uploadedSources.has(f.type));
+          const mergedFileSources = [...keptFileSources, ...fileSources];
+
+          const existingFileNames = existingData.uploadInfo?.originalFileNames || [];
+          // Keep file names from kept sources (approximate - remove old names for replaced sources)
+          const keptFileNames = keptFileSources.map(f => f.name);
+          const mergedFileNames = [...keptFileNames, ...files.map(f => f.originalname)];
+
           await existingData.update({
             barcodes: mergedBarcodes,
             uploadInfo: {
-              originalFileNames: [
-                ...(existingData.uploadInfo?.originalFileNames || []),
-                ...files.map(f => f.originalname)
-              ],
-              fileSources: [
-                ...(existingData.uploadInfo?.fileSources || []),
-                ...fileSources
-              ],
+              originalFileNames: mergedFileNames,
+              fileSources: mergedFileSources,
               uploadDate: new Date(),
-              totalRecords: mergedWaybillSet.size, // Use unique waybill count from merged data
-              totalProducts: mergedBarcodes.length, // Keep product count for reference
-              selectedDate: date, // The date selected during upload
+              totalRecords: mergedWaybillSet.size,
+              totalProducts: mergedBarcodes.length,
+              selectedDate: new Date().toISOString().split('T')[0],
             },
+            reconciliationSummary: { totalScanned: 0, matched: 0, unmatched: 0 },
           });
 
-          // Update the products array for response
+          // Update products array for downstream processing
           products.length = 0;
           products.push(...mergedBarcodes);
           waybillCountsByDate[rtsDate] = mergedWaybillSet;
@@ -669,209 +639,96 @@ const uploadRTOData = async (req, res) => {
     console.log('✅ Upload completed successfully');
 
     // Automatically reconcile unmatched scans that match the newly uploaded data
-    const reconcilableScans = [];
+    // Optimized: fetch unmatched scans ONCE and use in-memory matching
     const autoReconciledScans = [];
     try {
+      // Build a combined barcode→{date, product} map from ALL uploaded dates
+      const uploadedBarcodeMap = new Map();
       for (const [rtsDate, products] of Object.entries(productsByDate)) {
-        // Get all barcodes for this date (only items with valid RTS dates)
-        const barcodeSet = new Set();
-        const productsMap = new Map();
-        
         products.forEach((p) => {
-          // Only include items with valid RTS dates
           const rtsDateValue = p.rtsDate;
-          const hasValidRTSDate = rtsDateValue && 
-                                  rtsDateValue !== 'No RTS Date' && 
-                                  rtsDateValue !== 'No RTO Delivered Date' && 
+          const hasValidRTSDate = rtsDateValue &&
+                                  rtsDateValue !== 'No RTS Date' &&
+                                  rtsDateValue !== 'No RTO Delivered Date' &&
                                   rtsDateValue !== 'null' &&
                                   rtsDateValue !== 'undefined' &&
                                   rtsDateValue !== '' &&
-                                  rtsDateValue.trim() !== '';
-          
+                                  (typeof rtsDateValue === 'string' ? rtsDateValue.trim() !== '' : true);
+
           if (hasValidRTSDate && p.barcode) {
-            const barcodeKey = p.barcode.toString().toLowerCase();
-            barcodeSet.add(barcodeKey);
-            productsMap.set(barcodeKey, p);
+            uploadedBarcodeMap.set(p.barcode.toString().toLowerCase(), { date: rtsDate, product: p });
           }
         });
+      }
 
-        // Find unmatched scans that match these barcodes
-        // Check both same date (for same-day reconciliation) and different dates
-        const unmatchedScans = await ScanResult.findAll({
-          where: {
-            match: false,
-          },
-        });
+      // Fetch ALL unmatched scans ONCE
+      const allUnmatchedScans = await ScanResult.findAll({
+        where: { match: false },
+        attributes: ['id', 'barcode', 'date', 'timestamp'],
+      });
 
-        for (const scan of unmatchedScans) {
-          const scanBarcodeKey = scan.barcode?.toString().toLowerCase();
-          if (scanBarcodeKey && barcodeSet.has(scanBarcodeKey)) {
-            const matchedProduct = productsMap.get(scanBarcodeKey);
-            if (matchedProduct) {
-              // Automatically reconcile this scan
-              try {
-                // Get or create RTO data for the target date
-                let targetRtoData = await RTOData.findOne({
-                  where: { date: rtsDate },
-                });
+      // Find matches in memory
+      const scansToReconcile = [];
+      for (const scan of allUnmatchedScans) {
+        const scanKey = scan.barcode?.toString().toLowerCase();
+        if (scanKey && uploadedBarcodeMap.has(scanKey)) {
+          const { date: targetDate, product } = uploadedBarcodeMap.get(scanKey);
+          scansToReconcile.push({ scan, targetDate, product });
+        }
+      }
 
-                if (!targetRtoData) {
-                  // This shouldn't happen as we just created it, but handle it
-                  continue;
-                }
+      if (scansToReconcile.length > 0) {
+        // Batch reconciliation in a single transaction
+        const transaction = await sequelize.transaction();
+        try {
+          // Collect IDs to delete
+          const scanIdsToDelete = scansToReconcile.map(s => s.scan.id);
 
-                // Parse barcodes
-                let targetBarcodes = targetRtoData.barcodes || [];
-                if (typeof targetBarcodes === 'string') {
-                  try {
-                    targetBarcodes = JSON.parse(targetBarcodes);
-                  } catch (error) {
-                    console.error('Error parsing barcodes during auto-reconciliation:', error);
-                    continue;
-                  }
-                }
+          // Bulk delete old unmatched scans
+          await ScanResult.destroy({
+            where: { id: { [Op.in]: scanIdsToDelete } },
+            transaction,
+          });
 
-                if (!Array.isArray(targetBarcodes)) {
-                  continue;
-                }
+          // Bulk create new matched scans
+          const newScans = scansToReconcile.map(({ scan, targetDate, product }) => ({
+            barcode: scan.barcode,
+            date: targetDate,
+            match: true,
+            productName: product.productName,
+            quantity: product.quantity,
+            price: product.price,
+            message: scan.date !== targetDate
+              ? `Auto-reconciled from ${scan.date}`
+              : 'Auto-reconciled (data uploaded after scan)',
+            timestamp: scan.timestamp,
+            isFromDifferentDate: scan.date !== targetDate,
+            originalDate: scan.date !== targetDate ? scan.date : null,
+          }));
 
-                // Use transaction for atomic operations
-                const transaction = await sequelize.transaction();
+          await ScanResult.bulkCreate(newScans, { transaction });
 
-                try {
-                  // Update product status in RTO data
-                  const productIndex = targetBarcodes.findIndex(
-                    (item) =>
-                      item.barcode?.toString().toLowerCase() === scanBarcodeKey,
-                  );
+          await transaction.commit();
 
-                  if (productIndex !== -1) {
-                    targetBarcodes[productIndex].status = 'matched';
-                    targetBarcodes[productIndex].scannedAt = new Date();
-                  }
+          // Track for logging
+          scansToReconcile.forEach(({ scan, targetDate, product }) => {
+            autoReconciledScans.push({
+              scanId: scan.id,
+              barcode: scan.barcode,
+              scannedDate: scan.date,
+              targetDate,
+              productName: product.productName,
+            });
+          });
 
-                  // Update reconciliation summary for target date
-                  let targetSummary = targetRtoData.reconciliationSummary || {
-                    totalScanned: 0,
-                    matched: 0,
-                    unmatched: 0,
-                  };
-
-                  if (typeof targetSummary === 'string') {
-                    try {
-                      targetSummary = JSON.parse(targetSummary);
-                    } catch (error) {
-                      targetSummary = { totalScanned: 0, matched: 0, unmatched: 0 };
-                    }
-                  }
-
-                  targetSummary.totalScanned += 1;
-                  targetSummary.matched += 1;
-
-                  // Update reconciliation summary for original date (if different)
-                  let originalSummary = null;
-                  if (scan.date !== rtsDate) {
-                    const originalRtoData = await RTOData.findOne({
-                      where: { date: scan.date },
-                      transaction,
-                    });
-
-                    if (originalRtoData) {
-                      originalSummary = originalRtoData.reconciliationSummary || {
-                        totalScanned: 0,
-                        matched: 0,
-                        unmatched: 0,
-                      };
-
-                      if (typeof originalSummary === 'string') {
-                        try {
-                          originalSummary = JSON.parse(originalSummary);
-                        } catch (error) {
-                          originalSummary = { totalScanned: 0, matched: 0, unmatched: 0 };
-                        }
-                      }
-
-                      originalSummary.totalScanned = Math.max(0, originalSummary.totalScanned - 1);
-                      originalSummary.unmatched = Math.max(0, originalSummary.unmatched - 1);
-
-                      await RTOData.update(
-                        {
-                          reconciliationSummary: originalSummary,
-                        },
-                        {
-                          where: { id: originalRtoData.id },
-                          transaction,
-                        },
-                      );
-                    }
-                  }
-
-                  // Delete the unmatched scan
-                  await ScanResult.destroy({
-                    where: { id: scan.id },
-                    transaction,
-                  });
-
-                  // Create new matched scan for target date
-                  await ScanResult.create(
-                    {
-                      barcode: scan.barcode,
-                      date: rtsDate,
-                      match: true,
-                      productName: matchedProduct.productName,
-                      quantity: matchedProduct.quantity,
-                      price: matchedProduct.price,
-                      message: scan.date !== rtsDate 
-                        ? `Auto-reconciled from ${scan.date}` 
-                        : 'Auto-reconciled (data uploaded after scan)',
-                      timestamp: scan.timestamp, // Keep original scan timestamp
-                      isFromDifferentDate: scan.date !== rtsDate,
-                      originalDate: scan.date !== rtsDate ? scan.date : null,
-                    },
-                    { transaction },
-                  );
-
-                  // Update RTO data for target date
-                  await RTOData.update(
-                    {
-                      barcodes: targetBarcodes,
-                      reconciliationSummary: targetSummary,
-                    },
-                    {
-                      where: { id: targetRtoData.id },
-                      transaction,
-                    },
-                  );
-
-                  await transaction.commit();
-
-                  // Track auto-reconciled scan
-                  autoReconciledScans.push({
-                    scanId: scan.id,
-                    barcode: scan.barcode,
-                    scannedDate: scan.date,
-                    targetDate: rtsDate,
-                    productName: matchedProduct.productName,
-                  });
-
-                  console.log(`✅ Auto-reconciled scan: ${scan.barcode} from ${scan.date} to ${rtsDate}`);
-                } catch (error) {
-                  await transaction.rollback();
-                  console.error(`❌ Error auto-reconciling scan ${scan.id}:`, error);
-                  // Continue with other scans even if one fails
-                }
-              } catch (error) {
-                console.error(`❌ Error during auto-reconciliation for scan ${scan.id}:`, error);
-                // Continue with other scans
-              }
-            }
-          }
+          console.log(`✅ Auto-reconciled ${autoReconciledScans.length} unmatched scan(s) in batch`);
+        } catch (error) {
+          await transaction.rollback();
+          console.error('❌ Error during batch auto-reconciliation:', error);
         }
       }
 
       if (autoReconciledScans.length > 0) {
-        console.log(`✅ Auto-reconciled ${autoReconciledScans.length} unmatched scan(s)`);
-        // Clear cache for affected dates
         const affectedDates = new Set([
           ...autoReconciledScans.map(s => s.scannedDate),
           ...autoReconciledScans.map(s => s.targetDate),
@@ -881,7 +738,66 @@ const uploadRTOData = async (req, res) => {
       }
     } catch (reconcileError) {
       console.error('Error during auto-reconciliation:', reconcileError);
-      // Don't fail the upload if reconciliation check fails
+    }
+
+    // Invalidate orphaned matched scans: matched scans whose barcodes no longer exist in the upload
+    // Optimized: batch all dates into fewer queries
+    let invalidatedScans = 0;
+    try {
+      const uploadedDates = Object.keys(productsByDate);
+
+      // Fetch all matched scans for uploaded dates in ONE query
+      const allMatchedScans = await ScanResult.findAll({
+        where: {
+          date: { [Op.in]: uploadedDates },
+          match: true,
+        },
+        attributes: ['id', 'barcode', 'date'],
+      });
+
+      // Build valid barcode sets per date
+      const validBarcodesPerDate = {};
+      for (const [rtsDate, products] of Object.entries(productsByDate)) {
+        validBarcodesPerDate[rtsDate] = new Set();
+        products.forEach((p) => {
+          const rtsDateValue = p.rtsDate;
+          const hasValidRTSDate = rtsDateValue &&
+                                  rtsDateValue !== 'No RTS Date' &&
+                                  rtsDateValue !== 'No RTO Delivered Date' &&
+                                  rtsDateValue !== 'null' &&
+                                  rtsDateValue !== 'undefined' &&
+                                  rtsDateValue !== '' &&
+                                  (typeof rtsDateValue === 'string' ? rtsDateValue.trim() !== '' : true);
+
+          if (hasValidRTSDate && p.barcode) {
+            validBarcodesPerDate[rtsDate].add(p.barcode.toString().toLowerCase());
+          }
+        });
+      }
+
+      // Find all orphaned scan IDs in memory
+      const orphanedIds = [];
+      for (const scan of allMatchedScans) {
+        const scanBarcode = scan.barcode?.toString().toLowerCase();
+        const validSet = validBarcodesPerDate[scan.date];
+        if (scanBarcode && validSet && !validSet.has(scanBarcode)) {
+          orphanedIds.push(scan.id);
+        }
+      }
+
+      if (orphanedIds.length > 0) {
+        // Single bulk update for all orphaned scans
+        await ScanResult.update(
+          { match: false, message: 'Barcode not found in current upload data' },
+          { where: { id: { [Op.in]: orphanedIds } } }
+        );
+        invalidatedScans = orphanedIds.length;
+        console.log(`🔄 Invalidated ${invalidatedScans} orphaned matched scan(s) in batch`);
+        uploadedDates.forEach(date => clearCacheForDate(date));
+        clearOverallSummaryCache();
+      }
+    } catch (invalidateError) {
+      console.error('Error during orphan scan invalidation:', invalidateError);
     }
 
     // Clear overall summary cache since new data was uploaded
@@ -893,8 +809,8 @@ const uploadRTOData = async (req, res) => {
       totalRecords: totalWaybills, // Use unique waybill count
       totalProducts: totalProducts, // Keep product count for reference
       uploadResults: uploadResults,
-      reconcilableScans: reconcilableScans, // Scans that can be moved to matched (legacy, for manual reconciliation)
-      autoReconciledScans: autoReconciledScans, // Scans that were automatically reconciled
+      autoReconciledScans: autoReconciledScans,
+      invalidatedScans: invalidatedScans,
       summary: {
         totalDates: Object.keys(productsByDate).length,
         totalWaybills: totalWaybills,
