@@ -2190,9 +2190,259 @@ const reconcileUnmatchedScan = async (req, res) => {
   }
 };
 
+// Bulk scan barcodes from uploaded Excel file
+const bulkScanBarcodes = async (req, res) => {
+  try {
+    const { date } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Excel file is required' });
+    }
+
+    if (!date) {
+      return res.status(400).json({ error: 'Date is required' });
+    }
+
+    console.log('📤 Bulk scan started for date:', date);
+    console.log('📁 File received:', req.file.originalname);
+
+    // Parse Excel file
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    if (!data || data.length === 0) {
+      return res.status(400).json({ error: 'Excel file is empty' });
+    }
+
+    // Find barcode column - check first row for headers
+    let barcodeColumnIndex = 0;
+    const headers = data[0];
+    const possibleHeaders = ['barcode', 'awb', 'waybill', 'tracking', 'awb number', 'tracking number', 'barcode number'];
+    
+    if (Array.isArray(headers)) {
+      for (let i = 0; i < headers.length; i++) {
+        const header = String(headers[i]).toLowerCase().trim();
+        if (possibleHeaders.includes(header)) {
+          barcodeColumnIndex = i;
+          break;
+        }
+      }
+    }
+
+    // Extract barcodes - skip header row if it looks like a header
+    const startRow = possibleHeaders.includes(String(headers[0]).toLowerCase().trim()) ? 1 : 0;
+    const barcodes = [];
+    
+    for (let i = startRow; i < data.length; i++) {
+      const row = data[i];
+      if (row && row[barcodeColumnIndex]) {
+        const barcode = String(row[barcodeColumnIndex]).trim();
+        if (barcode && barcode.length > 0) {
+          barcodes.push(barcode);
+        }
+      }
+    }
+
+    if (barcodes.length === 0) {
+      return res.status(400).json({ error: 'No barcodes found in the Excel file' });
+    }
+
+    console.log(`📊 Found ${barcodes.length} barcodes to process`);
+
+    // Get RTO data for the date
+    const rtoData = await RTOData.findOne({
+      where: { date: date },
+      attributes: ['id', 'date', 'barcodes', 'reconciliationSummary'],
+    });
+
+    if (!rtoData) {
+      return res.status(404).json({ error: 'No RTO data found for this date. Please upload RTO data first.' });
+    }
+
+    // Parse barcodes from RTO data
+    let rtoBarcodes = rtoData.barcodes || [];
+    if (typeof rtoBarcodes === 'string') {
+      try {
+        rtoBarcodes = JSON.parse(rtoBarcodes);
+      } catch (error) {
+        console.error('Error parsing barcodes:', error);
+        rtoBarcodes = [];
+      }
+    }
+
+    // Build lookup map for RTO barcodes (only with valid RTS dates)
+    const barcodeMap = new Map();
+    rtoBarcodes.forEach((item, index) => {
+      const rtsDate = item.rtsDate;
+      const hasValidRTSDate = rtsDate && 
+                              rtsDate !== 'No RTS Date' && 
+                              rtsDate !== 'No RTO Delivered Date' && 
+                              rtsDate !== 'null' &&
+                              rtsDate !== 'undefined' &&
+                              rtsDate !== '' &&
+                              (typeof rtsDate === 'string' ? rtsDate.trim() !== '' : true);
+
+      if (hasValidRTSDate && item.barcode) {
+        const barcodeKey = item.barcode.toString().toLowerCase();
+        barcodeMap.set(barcodeKey, { ...item, index });
+      }
+    });
+
+    // Process results
+    const results = [];
+    let matchedCount = 0;
+    let unmatchedCount = 0;
+    let duplicateCount = 0;
+    let alreadyScannedCount = 0;
+
+    // Process each barcode
+    for (const barcode of barcodes) {
+      const barcodeKey = barcode.toString().toLowerCase();
+
+      // Check if already scanned on any date
+      const existingScan = await ScanResult.findOne({
+        where: { barcode: barcode },
+        attributes: ['date', 'match', 'timestamp'],
+        order: [['timestamp', 'DESC']],
+      });
+
+      if (existingScan) {
+        alreadyScannedCount++;
+        results.push({
+          barcode: barcode,
+          status: 'already_scanned',
+          match: existingScan.match,
+          message: `Already scanned on ${existingScan.date}`,
+          scannedDate: existingScan.date,
+        });
+        continue;
+      }
+
+      // Check if this barcode appears multiple times in the upload
+      const duplicateInBatch = results.some(r => r.barcode.toString().toLowerCase() === barcodeKey);
+      if (duplicateInBatch) {
+        duplicateCount++;
+        results.push({
+          barcode: barcode,
+          status: 'duplicate_in_file',
+          match: false,
+          message: 'Duplicate barcode in uploaded file',
+        });
+        continue;
+      }
+
+      // Check if barcode matches RTO data
+      const matchedBarcode = barcodeMap.get(barcodeKey);
+
+      if (matchedBarcode) {
+        // Matched - create scan result
+        const itemDate = rtoBarcodes[matchedBarcode.index].date;
+        const isFromDifferentDate = itemDate && itemDate !== date;
+
+        await ScanResult.create({
+          barcode: barcode,
+          date: date,
+          match: true,
+          productName: matchedBarcode.productName,
+          quantity: matchedBarcode.quantity,
+          price: matchedBarcode.price,
+          message: isFromDifferentDate
+            ? `Barcode matched in RTO data (from ${itemDate})`
+            : 'Barcode matched in RTO data (bulk upload)',
+          timestamp: new Date(),
+          isFromDifferentDate: isFromDifferentDate,
+          originalDate: itemDate,
+        });
+
+        matchedCount++;
+        results.push({
+          barcode: barcode,
+          status: 'matched',
+          match: true,
+          productName: matchedBarcode.productName,
+          quantity: matchedBarcode.quantity,
+          price: matchedBarcode.price,
+          message: 'Matched successfully',
+        });
+      } else {
+        // Not matched - create unmatched scan result
+        await ScanResult.create({
+          barcode: barcode,
+          date: date,
+          match: false,
+          productName: 'Unknown Product',
+          quantity: 1,
+          price: 0,
+          message: 'Barcode not found in RTO data (bulk upload)',
+          timestamp: new Date(),
+          isFromDifferentDate: false,
+          originalDate: null,
+        });
+
+        unmatchedCount++;
+        results.push({
+          barcode: barcode,
+          status: 'unmatched',
+          match: false,
+          message: 'Barcode not found in RTO data',
+        });
+      }
+    }
+
+    // Clean up uploaded file
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (cleanupError) {
+      console.warn('Failed to clean up uploaded file:', cleanupError.message);
+    }
+
+    // Clear cache for this date
+    clearCacheForDate(date);
+    clearOverallSummaryCache();
+
+    console.log(`✅ Bulk scan completed: ${matchedCount} matched, ${unmatchedCount} unmatched, ${alreadyScannedCount} already scanned, ${duplicateCount} duplicates`);
+
+    res.json({
+      success: true,
+      message: 'Bulk scan completed',
+      summary: {
+        totalProcessed: barcodes.length,
+        matched: matchedCount,
+        unmatched: unmatchedCount,
+        alreadyScanned: alreadyScannedCount,
+        duplicatesInFile: duplicateCount,
+      },
+      results: results,
+    });
+  } catch (error) {
+    console.error('Bulk scan error:', error);
+
+    // Clean up uploaded file on error
+    try {
+      const fs = require('fs');
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (cleanupError) {
+      console.warn('Failed to clean up uploaded file:', cleanupError.message);
+    }
+
+    res.status(500).json({
+      error: 'Failed to process bulk scan',
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   uploadRTOData,
   scanBarcode,
+  bulkScanBarcodes,
   getRTOReport,
   getCalendarData,
   getRTODataByDate,

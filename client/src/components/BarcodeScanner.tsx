@@ -7,6 +7,9 @@ import {
   XCircle,
   AlertCircle,
   Keyboard,
+  Upload,
+  FileSpreadsheet,
+  Loader2,
 } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 
@@ -129,7 +132,26 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
   const [scanDebounceTimer, setScanDebounceTimer] =
     useState<NodeJS.Timeout | null>(null);
   const [courierCounts, setCourierCounts] = useState<any[]>([]);
+  const [isBulkUploading, setIsBulkUploading] = useState(false);
+  const [bulkUploadResults, setBulkUploadResults] = useState<{
+    summary: {
+      totalProcessed: number;
+      matched: number;
+      unmatched: number;
+      alreadyScanned: number;
+      duplicatesInFile: number;
+    };
+    results: Array<{
+      barcode: string;
+      status: string;
+      match: boolean;
+      message: string;
+      productName?: string;
+    }>;
+  } | null>(null);
+  const [showBulkResults, setShowBulkResults] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const loadingRef = useRef(false);
 
   // Load scan data for selected date
@@ -927,7 +949,7 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           )}
 
           {/* Scanner Controls */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button
               onClick={() => setIsManualMode(!isManualMode)}
               variant={isManualMode ? 'default' : 'outline'}
@@ -939,6 +961,83 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
             >
               <Keyboard className="mr-2 h-5 w-5" />
               {isManualMode ? 'Scanner Mode' : 'Manual Input'}
+            </Button>
+            
+            {/* Bulk Upload Excel Button */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                
+                setIsBulkUploading(true);
+                setBulkUploadResults(null);
+                
+                try {
+                  const year = selectedDate.getFullYear();
+                  const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                  const day = String(selectedDate.getDate()).padStart(2, '0');
+                  const dateString = `${year}-${month}-${day}`;
+                  
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  formData.append('date', dateString);
+                  
+                  const response = await fetch(API_ENDPOINTS.RTO.BULK_SCAN, {
+                    method: 'POST',
+                    body: formData,
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (!response.ok) {
+                    throw new Error(data.error || 'Bulk upload failed');
+                  }
+                  
+                  setBulkUploadResults(data);
+                  setShowBulkResults(true);
+                  
+                  // Refresh scan data
+                  loadScanData(selectedDate);
+                  loadCourierCounts(selectedDate);
+                  
+                  setErrorPopup({
+                    isOpen: true,
+                    title: 'Bulk Upload Complete',
+                    message: `Processed ${data.summary.totalProcessed} barcodes: ${data.summary.matched} matched, ${data.summary.unmatched} unmatched, ${data.summary.alreadyScanned} already scanned.`,
+                    type: 'success',
+                  });
+                } catch (err) {
+                  console.error('Bulk upload error:', err);
+                  setErrorPopup({
+                    isOpen: true,
+                    title: 'Bulk Upload Error',
+                    message: err instanceof Error ? err.message : 'Failed to process bulk upload',
+                    type: 'error',
+                  });
+                } finally {
+                  setIsBulkUploading(false);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
+                }
+              }}
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isBulkUploading || !scanSummary.totalAvailable}
+              variant="outline"
+              className="h-10 px-4 rounded-lg transition-all duration-200 border border-green-300 hover:border-green-500 hover:bg-green-50 text-green-700"
+            >
+              {isBulkUploading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="mr-2 h-5 w-5" />
+              )}
+              {isBulkUploading ? 'Uploading...' : 'Upload Excel'}
             </Button>
           </div>
 
@@ -993,6 +1092,98 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Bulk Upload Results */}
+      {bulkUploadResults && showBulkResults && (
+        <Card className="bg-white border border-green-200 rounded-lg shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                </div>
+                Bulk Upload Results
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowBulkResults(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XCircle className="h-5 w-5" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-blue-600">{bulkUploadResults.summary.totalProcessed}</div>
+                <div className="text-xs text-blue-700">Total</div>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-green-600">{bulkUploadResults.summary.matched}</div>
+                <div className="text-xs text-green-700">Matched</div>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-red-600">{bulkUploadResults.summary.unmatched}</div>
+                <div className="text-xs text-red-700">Unmatched</div>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-yellow-600">{bulkUploadResults.summary.alreadyScanned}</div>
+                <div className="text-xs text-yellow-700">Already Scanned</div>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-gray-600">{bulkUploadResults.summary.duplicatesInFile}</div>
+                <div className="text-xs text-gray-700">Duplicates</div>
+              </div>
+            </div>
+
+            {/* Results List */}
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {bulkUploadResults.results.map((result, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-3 rounded-lg text-sm ${
+                    result.status === 'matched'
+                      ? 'bg-green-50 border border-green-200'
+                      : result.status === 'already_scanned'
+                      ? 'bg-yellow-50 border border-yellow-200'
+                      : result.status === 'duplicate_in_file'
+                      ? 'bg-gray-50 border border-gray-200'
+                      : 'bg-red-50 border border-red-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {result.status === 'matched' ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : result.status === 'already_scanned' ? (
+                      <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <code className="font-mono text-xs bg-white/50 px-2 py-0.5 rounded">{result.barcode}</code>
+                    {result.productName && (
+                      <span className="text-gray-600 text-xs">{result.productName}</span>
+                    )}
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    result.status === 'matched'
+                      ? 'bg-green-100 text-green-700'
+                      : result.status === 'already_scanned'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : result.status === 'duplicate_in_file'
+                      ? 'bg-gray-100 text-gray-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    {result.message}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Scan Results */}
       {scanResults.length > 0 && (

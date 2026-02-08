@@ -5,6 +5,7 @@ const { requireAdmin } = require('../middleware/auth');
 const {
   uploadRTOData,
   scanBarcode,
+  bulkScanBarcodes,
   getRTOReport,
   getCalendarData,
   getRTODataByDate,
@@ -23,6 +24,7 @@ const {
   getBackups,
   cleanupBackups,
 } = require('../controllers/backupController');
+
 
 // Upload RTO Excel file (supports single or multiple files)
 router.post(
@@ -72,6 +74,9 @@ router.post(
 
 // Scan barcode
 router.post('/scan', scanBarcode);
+
+// Bulk scan barcodes from Excel file
+router.post('/scan/bulk', upload.single('file'), bulkScanBarcodes);
 
 // Get RTO report for specific date
 router.get('/report/:date', getRTOReport);

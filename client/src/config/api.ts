@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
     RECONCILE_SCAN: `${API_BASE_URL}/api/rto/scan/reconcile`,
     RECONCILABLE_SCANS: (date: string) =>
       `${API_BASE_URL}/api/rto/reconcilable/${date}`,
+    BULK_SCAN: `${API_BASE_URL}/api/rto/scan/bulk`,
   },
   COMPLAINTS: {
     ALL: `${API_BASE_URL}/api/complaints`,
