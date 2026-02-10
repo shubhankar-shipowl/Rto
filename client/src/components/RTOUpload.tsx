@@ -23,6 +23,7 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
 }) => {
   const [oldSheetFile, setOldSheetFile] = useState<File | null>(null);
   const [nimbuFile, setNimbuFile] = useState<File | null>(null);
+  const [shipOwlFile, setShipOwlFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
 
@@ -70,9 +71,24 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
     }
   };
 
+  const handleShipOwlFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      if (validateFile(selectedFile)) {
+        setShipOwlFile(selectedFile);
+        setUploadResult(null);
+      } else {
+        alert('Please select a valid Excel file (.xlsx or .xls)');
+        event.target.value = '';
+      }
+    }
+  };
+
   const handleUpload = async () => {
-    if (!oldSheetFile && !nimbuFile) {
-      alert('Please select at least one file (Old Sheet or Nimbu Sheet)');
+    if (!oldSheetFile && !nimbuFile && !shipOwlFile) {
+      alert('Please select at least one file (Parcel X, NimbusPost, or ShipOwl)');
       return;
     }
 
@@ -89,6 +105,11 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
       // Add Nimbu file if provided
       if (nimbuFile) {
         formData.append('nimbuFile', nimbuFile);
+      }
+
+      // Add ShipOwl file if provided
+      if (shipOwlFile) {
+        formData.append('shipOwlFile', shipOwlFile);
       }
 
       formData.append(
@@ -110,6 +131,7 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
         onUploadSuccess(result);
         setOldSheetFile(null);
         setNimbuFile(null);
+        setShipOwlFile(null);
         // Reset file inputs
         const oldSheetInput = document.getElementById(
           'old-sheet-upload',
@@ -117,8 +139,12 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
         const nimbuInput = document.getElementById(
           'nimbu-file-upload',
         ) as HTMLInputElement;
+        const shipOwlInput = document.getElementById(
+          'shipowl-file-upload',
+        ) as HTMLInputElement;
         if (oldSheetInput) oldSheetInput.value = '';
         if (nimbuInput) nimbuInput.value = '';
+        if (shipOwlInput) shipOwlInput.value = '';
       } else {
         throw new Error(result.error || 'Upload failed');
       }
@@ -140,9 +166,9 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
           Upload RTO Excel File
         </CardTitle>
         <CardDescription className="text-gray-600 text-base">
-          Upload RTO Excel sheets. You can upload the old sheet format and/or
-          the new Nimbu sheet. The system will automatically merge data from
-          both sheets. Courier names (Delhivery and XB) will be normalized.
+          Upload RTO Excel sheets. You can upload Parcel X, NimbusPost, and/or
+          ShipOwl sheets. The system will automatically merge data from
+          all sheets. Courier names (Delhivery and XB) will be normalized.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
@@ -216,10 +242,45 @@ export const RTOUpload: React.FC<RTOUploadProps> = ({
           )}
         </div>
 
+        {/* ShipOwl Upload */}
+        <div className="space-y-4">
+          <Label
+            htmlFor="shipowl-file-upload"
+            className="text-sm font-semibold text-gray-700"
+          >
+            ShipOwl
+          </Label>
+          <div className="relative">
+            <Input
+              id="shipowl-file-upload"
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleShipOwlFileChange}
+              className="h-14 border-2 border-dashed border-gray-300 hover:border-green-400 focus:border-green-500 rounded-xl transition-all duration-200 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20"
+            />
+            <Upload className="absolute right-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+          </div>
+          {shipOwlFile && (
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-xl">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <FileSpreadsheet className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <span className="text-sm text-green-700 font-semibold">
+                  Selected: {shipOwlFile.name}
+                </span>
+                <p className="text-xs text-green-600">
+                  Size: {(shipOwlFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Upload Button */}
         <Button
           onClick={handleUpload}
-          disabled={(!oldSheetFile && !nimbuFile) || isUploading}
+          disabled={(!oldSheetFile && !nimbuFile && !shipOwlFile) || isUploading}
           className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
         >
           {isUploading ? (

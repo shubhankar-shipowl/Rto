@@ -34,7 +34,8 @@ router.post(
     // Try multiple files first, fallback to single file
     upload.fields([
       { name: 'file', maxCount: 1 },
-      { name: 'nimbuFile', maxCount: 1 }
+      { name: 'nimbuFile', maxCount: 1 },
+      { name: 'shipOwlFile', maxCount: 1 }
     ])(req, res, (err) => {
       if (err) {
         console.error('❌ Multer error:', err);
@@ -46,7 +47,7 @@ router.post(
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
           return res.status(400).json({
             error:
-              'Unexpected field name. Please use "file" for old sheet and "nimbuFile" for Nimbu sheet.',
+              'Unexpected field name. Please use "file" for Parcel X, "nimbuFile" for NimbusPost, and "shipOwlFile" for ShipOwl.',
           });
         }
         return res.status(400).json({
@@ -58,7 +59,8 @@ router.post(
       if (req.files) {
         req.files = [
           ...(req.files.file || []),
-          ...(req.files.nimbuFile || [])
+          ...(req.files.nimbuFile || []),
+          ...(req.files.shipOwlFile || [])
         ];
       } else if (req.file) {
         // Fallback: if only single file upload, convert to array

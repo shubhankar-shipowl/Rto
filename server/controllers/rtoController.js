@@ -254,9 +254,11 @@ const uploadRTOData = async (req, res) => {
 
     // Process each file
     for (const file of files) {
-      // Detect sheet format by structure, not filename
-      const isNimbuSheet = detectNimbuSheet(file.path);
-      
+      // Determine source type: ShipOwl by fieldname, NimbusPost by header detection, else Parcel X
+      const isShipOwlFile = file.fieldname === 'shipOwlFile';
+      const isNimbuSheet = !isShipOwlFile && detectNimbuSheet(file.path);
+      const sourceType = isShipOwlFile ? 'ShipOwl' : (isNimbuSheet ? 'NimbusPost' : 'Parcel X');
+
       if (isNimbuSheet) {
         // Process Nimbu sheet (new format)
         console.log('📊 Processing Nimbu sheet:', file.originalname);
@@ -291,8 +293,8 @@ const uploadRTOData = async (req, res) => {
         
         fileSources.push({ name: file.originalname, type: 'NimbusPost' });
       } else {
-        // Process old sheet format
-        console.log('📊 Processing old sheet format:', file.originalname);
+        // Process old sheet format (Parcel X or ShipOwl - same column structure)
+        console.log(`📊 Processing ${sourceType} sheet:`, file.originalname);
         const workbook = XLSX.readFile(file.path);
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -493,7 +495,7 @@ const uploadRTOData = async (req, res) => {
             state: row['State'],
             pincode: row['Pincode'],
             fulfilledBy: fulfilledBy, // Normalized courier
-            source: 'Parcel X', // Mark as from Parcel X sheet
+            source: sourceType, // Mark source (Parcel X or ShipOwl)
           });
 
           // Track unique waybills
@@ -502,7 +504,7 @@ const uploadRTOData = async (req, res) => {
         }
       });
       
-      fileSources.push({ name: file.originalname, type: 'Parcel X' });
+      fileSources.push({ name: file.originalname, type: sourceType });
     }
   }
 
