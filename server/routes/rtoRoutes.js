@@ -16,6 +16,7 @@ const {
   deleteAllUploadedData,
   getCourierCounts,
   deleteUnmatchedScan,
+  bulkDeleteUnmatchedScans,
   reconcileUnmatchedScan,
   getReconcilableScans,
 } = require('../controllers/rtoController');
@@ -109,6 +110,9 @@ router.get('/courier-counts/:date', getCourierCounts);
 
 // Delete unmatched scan result (Admin only)
 router.delete('/scan/unmatched', requireAdmin, deleteUnmatchedScan);
+
+// Bulk delete unmatched scan results (Admin only)
+router.delete('/scan/unmatched/bulk', requireAdmin, bulkDeleteUnmatchedScans);
 
 // Reconcile unmatched scan to matched (move to correct date)
 router.post('/scan/reconcile', reconcileUnmatchedScan);

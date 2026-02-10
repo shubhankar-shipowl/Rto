@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
     COURIER_COUNTS: (date: string) =>
       `${API_BASE_URL}/api/rto/courier-counts/${date}`,
     DELETE_UNMATCHED_SCAN: `${API_BASE_URL}/api/rto/scan/unmatched`,
+    BULK_DELETE_UNMATCHED_SCANS: `${API_BASE_URL}/api/rto/scan/unmatched/bulk`,
     RECONCILE_SCAN: `${API_BASE_URL}/api/rto/scan/reconcile`,
     RECONCILABLE_SCANS: (date: string) =>
       `${API_BASE_URL}/api/rto/reconcilable/${date}`,

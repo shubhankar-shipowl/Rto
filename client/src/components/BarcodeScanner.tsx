@@ -10,8 +10,10 @@ import {
   Upload,
   FileSpreadsheet,
   Loader2,
+  Download,
 } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
+import * as XLSX from 'xlsx';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -1038,6 +1040,20 @@ const BarcodeScannerMain: React.FC<BarcodeScannerProps> = ({
                 <FileSpreadsheet className="mr-2 h-5 w-5" />
               )}
               {isBulkUploading ? 'Uploading...' : 'Upload Excel'}
+            </Button>
+
+            <Button
+              onClick={() => {
+                const ws = XLSX.utils.aoa_to_sheet([['Barcode'], ['SAMPLE123456789']]);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Scan Barcodes');
+                XLSX.writeFile(wb, 'scan-sample.xlsx');
+              }}
+              variant="outline"
+              className="h-10 px-4 rounded-lg transition-all duration-200 border border-blue-300 hover:border-blue-500 hover:bg-blue-50 text-blue-700"
+            >
+              <Download className="mr-2 h-5 w-5" />
+              Download Sample
             </Button>
           </div>
 

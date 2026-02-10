@@ -1911,6 +1911,75 @@ const deleteUnmatchedScan = async (req, res) => {
   }
 };
 
+// Bulk delete unmatched scans
+const bulkDeleteUnmatchedScans = async (req, res) => {
+  try {
+    const { barcodes, date } = req.body;
+
+    if (!barcodes || !Array.isArray(barcodes) || barcodes.length === 0 || !date) {
+      return res.status(400).json({ error: 'Barcodes array and date are required' });
+    }
+
+    // Delete all specified unmatched scans
+    const deletedCount = await ScanResult.destroy({
+      where: {
+        barcode: { [Op.in]: barcodes },
+        date: date,
+        match: false,
+      },
+    });
+
+    if (deletedCount === 0) {
+      return res.status(404).json({
+        message: 'No unmatched scan results found for the given barcodes',
+      });
+    }
+
+    // Update the reconciliation summary for the date
+    const rtoData = await RTOData.findOne({
+      where: { date: date },
+    });
+
+    if (rtoData) {
+      let summary = rtoData.reconciliationSummary || {
+        totalScanned: 0,
+        matched: 0,
+        unmatched: 0,
+      };
+
+      if (typeof summary === 'string') {
+        try {
+          summary = JSON.parse(summary);
+        } catch (error) {
+          summary = { totalScanned: 0, matched: 0, unmatched: 0 };
+        }
+      }
+
+      summary.totalScanned = Math.max(0, summary.totalScanned - deletedCount);
+      summary.unmatched = Math.max(0, summary.unmatched - deletedCount);
+
+      await RTOData.update(
+        { reconciliationSummary: summary },
+        { where: { id: rtoData.id } },
+      );
+    }
+
+    clearCacheForDate(date);
+    clearOverallSummaryCache();
+
+    res.status(200).json({
+      message: `${deletedCount} unmatched scan(s) deleted successfully`,
+      deletedCount,
+    });
+  } catch (error) {
+    console.error('Error bulk deleting unmatched scans:', error);
+    res.status(500).json({
+      message: 'Failed to bulk delete unmatched scans',
+      error: error.message,
+    });
+  }
+};
+
 // Get reconcilable unmatched scans (scans that exist in other dates' RTO data)
 const getReconcilableScans = async (req, res) => {
   try {
@@ -2455,6 +2524,7 @@ module.exports = {
   deleteAllUploadedData,
   getCourierCounts,
   deleteUnmatchedScan,
+  bulkDeleteUnmatchedScans,
   reconcileUnmatchedScan,
   getReconcilableScans,
 };

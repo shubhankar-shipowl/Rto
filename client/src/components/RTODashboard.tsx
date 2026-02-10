@@ -728,6 +728,54 @@ export const RTODashboard: React.FC = () => {
     ],
   );
 
+  const handleBulkDeleteUnmatched = useCallback(
+    async (barcodes: string[]) => {
+      if (!reportsSelectedDate || barcodes.length === 0) return;
+
+      try {
+        const year = reportsSelectedDate.getFullYear();
+        const month = String(reportsSelectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(reportsSelectedDate.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        const response = await fetch(API_ENDPOINTS.RTO.BULK_DELETE_UNMATCHED_SCANS, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            barcodes: barcodes,
+            date: dateString,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ Bulk deleted ${result.deletedCount} unmatched scans`);
+          await loadReportsScanResults(reportsSelectedDate);
+          await loadReportsRTOData(reportsSelectedDate);
+          await loadReportsCourierCounts(reportsSelectedDate);
+          await loadOverallUploadSummary(0, true);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          if (response.status === 403) {
+            alert('Access denied: Admin privileges required');
+          } else {
+            alert(`Failed to bulk delete: ${errorData.error || errorData.message || 'Unknown error'}`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error bulk deleting unmatched scans:', error);
+        alert('Failed to bulk delete unmatched scans. Please try again.');
+      }
+    },
+    [
+      reportsSelectedDate,
+      loadReportsScanResults,
+      loadReportsRTOData,
+      loadReportsCourierCounts,
+      loadOverallUploadSummary,
+    ],
+  );
+
   // Debug upload summary changes
   useEffect(() => {
     console.log('Upload summary updated:', uploadSummary);
@@ -1185,6 +1233,7 @@ export const RTODashboard: React.FC = () => {
                     courierCounts={reportsCourierCounts}
                     rtoData={reportsRTOData}
                     onDeleteUnmatched={handleDeleteUnmatched}
+                    onBulkDeleteUnmatched={handleBulkDeleteUnmatched}
                     isAdmin={isAdmin}
                   />
                 </>

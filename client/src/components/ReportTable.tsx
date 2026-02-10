@@ -47,6 +47,7 @@ import {
 import ComplaintDialog from './ComplaintDialog';
 import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 // Utility function to format date in IST as YYYY-MM-DD without timezone conversion issues
 const formatDateInIST = (date: Date): string => {
@@ -85,6 +86,7 @@ interface ReportTableProps {
   courierCounts?: any[];
   rtoData?: any[];
   onDeleteUnmatched?: (barcode: string) => void;
+  onBulkDeleteUnmatched?: (barcodes: string[]) => Promise<void>;
   isAdmin?: boolean;
 }
 
@@ -116,15 +118,14 @@ const TABLE_CONFIGS = {
     headers: ['Source', 'Courier Name', 'Barcode', 'Product', 'Qty', 'Price', 'Action'],
   },
   unmatched: {
-    columns: 7,
+    columns: 6,
     headers: [
       'Source',
       'Courier Name',
       'Barcode',
       'Status',
-      'Remarks',
+      'Reason',
       'Time',
-      'Actions',
     ],
   },
 } as const;
@@ -172,9 +173,12 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   courierCounts = [],
   rtoData = [],
   onDeleteUnmatched,
+  onBulkDeleteUnmatched,
   isAdmin = false,
 }) => {
   // State
+  const [selectedUnmatched, setSelectedUnmatched] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [complaintDialog, setComplaintDialog] = useState<ComplaintDialogState>({
     isOpen: false,
     barcode: '',
@@ -502,6 +506,114 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     }
   }, [selectedDate, data, rtoData, unscannedProducts, availableSources, matchedSourceFilter, unscannedSourceFilter, unmatchedSourceFilter]);
 
+  // Export unscanned items to Excel
+  const exportUnscannedToExcel = useCallback(() => {
+    try {
+      const items = filteredData.unscannedData;
+      if (items.length === 0) {
+        alert('No unscanned items to export.');
+        return;
+      }
+
+      const rows = items.map((item) => ({
+        'Source': getSourceDisplayName(item.source),
+        'Courier Name': item.fulfilledBy || 'Unknown Courier',
+        'Barcode': item.barcode || '',
+        'Product Name': item.productName || 'Unknown Product',
+        'Quantity': item.quantity || 1,
+        'Price': item.price || 0,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Unscanned Items');
+
+      const dateString =
+        selectedDate && !isNaN(selectedDate.getTime())
+          ? selectedDate.toISOString().split('T')[0]
+          : 'unknown-date';
+
+      XLSX.writeFile(wb, `unscanned-items-${dateString}.xlsx`);
+    } catch (error) {
+      console.error('Error exporting unscanned Excel:', error);
+      alert('Error exporting Excel file. Please try again.');
+    }
+  }, [filteredData.unscannedData, selectedDate, getSourceDisplayName]);
+
+  // Export matched items to Excel
+  const exportMatchedToExcel = useCallback(() => {
+    try {
+      const items = filteredData.matchedData;
+      if (items.length === 0) {
+        alert('No matched items to export.');
+        return;
+      }
+
+      const rows = items.map((item) => ({
+        'Source': item.source || 'Unknown',
+        'Courier Name': item.fulfilledBy || 'Unknown Courier',
+        'Barcode': item.barcode || '',
+        'Product Name': item.productName || 'Unknown Product',
+        'Quantity': item.quantity || 1,
+        'Price': item.price || 0,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Matched Items');
+
+      const dateString =
+        selectedDate && !isNaN(selectedDate.getTime())
+          ? selectedDate.toISOString().split('T')[0]
+          : 'unknown-date';
+
+      XLSX.writeFile(wb, `matched-items-${dateString}.xlsx`);
+    } catch (error) {
+      console.error('Error exporting matched Excel:', error);
+      alert('Error exporting Excel file. Please try again.');
+    }
+  }, [filteredData.matchedData, selectedDate]);
+
+  // Export unmatched items to Excel
+  const exportUnmatchedToExcel = useCallback(() => {
+    try {
+      const items = filteredData.unmatchedData;
+      if (items.length === 0) {
+        alert('No unmatched items to export.');
+        return;
+      }
+
+      const rows = items.map((item) => {
+        let reason = item.message || 'Barcode not found in RTO data';
+        if (item.isFromDifferentDate && item.originalDate) {
+          reason += ` | Correct Date: ${item.originalDate}`;
+        }
+        return {
+          'Source': item.source || 'Unknown',
+          'Courier Name': item.fulfilledBy || 'Unknown Courier',
+          'Barcode': item.barcode || '',
+          'Status': 'Not Found',
+          'Reason': reason,
+          'Time': item.timestamp ? formatTimestamp(item.timestamp) : '',
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Unmatched Items');
+
+      const dateString =
+        selectedDate && !isNaN(selectedDate.getTime())
+          ? selectedDate.toISOString().split('T')[0]
+          : 'unknown-date';
+
+      XLSX.writeFile(wb, `unmatched-items-${dateString}.xlsx`);
+    } catch (error) {
+      console.error('Error exporting unmatched Excel:', error);
+      alert('Error exporting Excel file. Please try again.');
+    }
+  }, [filteredData.unmatchedData, selectedDate]);
+
   // CSV export function
   const exportToCSV = useCallback(() => {
     try {
@@ -731,9 +843,21 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl overflow-hidden">
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl">
-            Matched Items ({filteredData.matchedData.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">
+              Matched Items ({filteredData.matchedData.length})
+            </CardTitle>
+            <Button
+              onClick={exportMatchedToExcel}
+              disabled={filteredData.matchedData.length === 0}
+              variant="outline"
+              size="sm"
+              className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:text-white disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </div>
         </CardHeader>
       </div>
       <CardContent className="p-6">
@@ -816,9 +940,21 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl overflow-hidden">
       <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-6 text-white">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl">
-            Unscanned Items ({filteredData.unscannedData.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">
+              Unscanned Items ({filteredData.unscannedData.length})
+            </CardTitle>
+            <Button
+              onClick={exportUnscannedToExcel}
+              disabled={filteredData.unscannedData.length === 0}
+              variant="outline"
+              size="sm"
+              className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:text-white disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </div>
         </CardHeader>
       </div>
       <CardContent className="p-6">
@@ -922,13 +1058,25 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl overflow-hidden">
       <div className="bg-gradient-to-r from-red-600 to-pink-600 p-6 text-white">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl">
-            Unmatched Items ({filteredData.unmatchedData.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">
+              Unmatched Items ({filteredData.unmatchedData.length})
+            </CardTitle>
+            <Button
+              onClick={exportUnmatchedToExcel}
+              disabled={filteredData.unmatchedData.length === 0}
+              variant="outline"
+              size="sm"
+              className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:text-white disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </div>
         </CardHeader>
       </div>
       <CardContent className="p-6">
-        {/* Search Bar and Source Filter */}
+        {/* Search Bar, Source Filter, and Bulk Delete */}
         <div className="mb-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -956,11 +1104,68 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               </SelectContent>
             </Select>
           </div>
+          {isAdmin && onBulkDeleteUnmatched && selectedUnmatched.size > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  disabled={isBulkDeleting}
+                  className="flex items-center gap-2 w-full whitespace-nowrap"
+                >
+                  <Trash2 className="h-4 w-4 shrink-0" />
+                  {isBulkDeleting ? 'Deleting...' : `Delete Selected (${selectedUnmatched.size})`}
+                </Button>
+              </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Bulk Delete Unmatched Items</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete <strong>{selectedUnmatched.size}</strong> unmatched scan result(s)?
+                      <br /><br />
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        setIsBulkDeleting(true);
+                        try {
+                          await onBulkDeleteUnmatched(Array.from(selectedUnmatched));
+                          setSelectedUnmatched(new Set());
+                        } finally {
+                          setIsBulkDeleting(false);
+                        }
+                      }}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Delete {selectedUnmatched.size} Items
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+          )}
         </div>
         <div className="max-h-96 overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                {isAdmin && onBulkDeleteUnmatched && (
+                  <TableHead className="w-10">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 cursor-pointer"
+                      checked={filteredData.unmatchedData.length > 0 && selectedUnmatched.size === filteredData.unmatchedData.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedUnmatched(new Set(filteredData.unmatchedData.map(item => item.barcode)));
+                        } else {
+                          setSelectedUnmatched(new Set());
+                        }
+                      }}
+                    />
+                  </TableHead>
+                )}
                 {TABLE_CONFIGS.unmatched.headers.map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
@@ -969,6 +1174,24 @@ export const ReportTable: React.FC<ReportTableProps> = ({
             <TableBody>
               {filteredData.unmatchedData.map((item, index) => (
                 <TableRow key={index}>
+                  {isAdmin && onBulkDeleteUnmatched && (
+                    <TableCell className="w-10">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 cursor-pointer"
+                        checked={selectedUnmatched.has(item.barcode)}
+                        onChange={(e) => {
+                          const newSet = new Set(selectedUnmatched);
+                          if (e.target.checked) {
+                            newSet.add(item.barcode);
+                          } else {
+                            newSet.delete(item.barcode);
+                          }
+                          setSelectedUnmatched(newSet);
+                        }}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
                       {item.source || 'Unknown'}
@@ -988,8 +1211,11 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {item.isFromDifferentDate && item.originalDate ? (
-                      <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-red-600 font-medium">
+                        {item.message || 'Barcode not found in RTO data'}
+                      </span>
+                      {item.isFromDifferentDate && item.originalDate && (
                         <Badge
                           variant="outline"
                           size="sm"
@@ -997,116 +1223,18 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                         >
                           Correct Date: {item.originalDate}
                         </Badge>
-                        {item.message && (
-                          <span className="text-xs text-gray-600 italic">
-                            {item.message}
-                          </span>
-                        )}
-                      </div>
-                    ) : item.message && item.message !== 'Barcode not found in RTO data' ? (
-                      <span className="text-xs text-gray-600">{item.message}</span>
-                    ) : (
-                      <span className="text-gray-500">-</span>
-                    )}
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm">
                     {formatTimestamp(item.timestamp)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {/* Move to Matched button for reconcilable scans */}
-                      {(() => {
-                        const reconcilableScan = reconcilableScans.find(
-                          (rs) =>
-                            rs.scanId === (item as any).id ||
-                            rs.barcode === item.barcode,
-                        );
-                        if (reconcilableScan) {
-                          return (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300"
-                              disabled={reconcilingScanId === reconcilableScan.scanId}
-                              onClick={() =>
-                                handleReconcile(
-                                  reconcilableScan.scanId,
-                                  reconcilableScan.targetDate,
-                                )
-                              }
-                            >
-                              {reconcilingScanId === reconcilableScan.scanId ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-green-600 border-t-transparent"></div>
-                                  Moving...
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1">
-                                  <ArrowRight className="h-3 w-3" />
-                                  Move to {reconcilableScan.targetDate}
-                                </div>
-                              )}
-                            </Button>
-                          );
-                        }
-                        return null;
-                      })()}
-                      {/* Delete button for admin */}
-                      {isAdmin && onDeleteUnmatched && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 icon-align"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete Unmatched Item
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this unmatched scan
-                                result?
-                                <br />
-                                <strong>Barcode:</strong> {item.barcode}
-                                <br />
-                                <strong>Time:</strong>{' '}
-                                {formatTimestamp(item.timestamp)}
-                                <br />
-                                <br />
-                                This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDeleteUnmatched?.(item.barcode)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                      {!isAdmin &&
-                        !reconcilableScans.find(
-                          (rs) =>
-                            rs.scanId === (item as any).id ||
-                            rs.barcode === item.barcode,
-                        ) && <span className="text-gray-400 text-sm">-</span>}
-                    </div>
                   </TableCell>
                 </TableRow>
               ))}
               {filteredData.unmatchedData.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={TABLE_CONFIGS.unmatched.columns}
+                    colSpan={TABLE_CONFIGS.unmatched.columns + (isAdmin && onBulkDeleteUnmatched ? 1 : 0)}
                     className="text-center text-gray-500"
                   >
                     {unmatchedSearchTerm
