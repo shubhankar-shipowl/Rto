@@ -882,9 +882,14 @@ const scanBarcode = async (req, res) => {
       });
 
       if (!rtoData) {
-        return res
-          .status(404)
-          .json({ error: 'No RTO data found for this date' });
+        // No data uploaded for this date yet - create an empty record so scans can be saved as unmatched
+        // These unmatched scans will auto-reconcile when data is uploaded later
+        console.log(`📦 No RTO data for ${date} - creating empty record for scan tracking`);
+        rtoData = await RTOData.create({
+          date: date,
+          barcodes: [],
+          reconciliationSummary: { totalScanned: 0, matched: 0, unmatched: 0 },
+        });
       }
 
       // Cache the data
@@ -913,9 +918,13 @@ const scanBarcode = async (req, res) => {
       });
 
       if (!rtoData) {
-        return res
-          .status(404)
-          .json({ error: 'No RTO data found for this date' });
+        // Fallback: create empty record if still not found
+        console.log(`📦 Fallback: creating empty RTO record for ${date}`);
+        rtoData = await RTOData.create({
+          date: date,
+          barcodes: [],
+          reconciliationSummary: { totalScanned: 0, matched: 0, unmatched: 0 },
+        });
       }
     }
 
