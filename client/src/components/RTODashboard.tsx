@@ -750,10 +750,35 @@ export const RTODashboard: React.FC = () => {
         if (response.ok) {
           const result = await response.json();
           console.log(`✅ Bulk deleted ${result.deletedCount} unmatched scans`);
-          await loadReportsScanResults(reportsSelectedDate);
-          await loadReportsRTOData(reportsSelectedDate);
-          await loadReportsCourierCounts(reportsSelectedDate);
-          await loadOverallUploadSummary(0, true);
+          // Refresh reports data - wrap each in try-catch so reload errors
+          // don't trigger a misleading "failed to delete" alert
+          try {
+            await loadReportsScanResults(reportsSelectedDate);
+            console.log('✅ loadReportsScanResults completed');
+          } catch (error) {
+            console.error('❌ Error in loadReportsScanResults:', error);
+          }
+
+          try {
+            await loadReportsRTOData(reportsSelectedDate);
+            console.log('✅ loadReportsRTOData completed');
+          } catch (error) {
+            console.error('❌ Error in loadReportsRTOData:', error);
+          }
+
+          try {
+            await loadReportsCourierCounts(reportsSelectedDate);
+            console.log('✅ loadReportsCourierCounts completed');
+          } catch (error) {
+            console.error('❌ Error in loadReportsCourierCounts:', error);
+          }
+
+          try {
+            await loadOverallUploadSummary(0, true);
+            console.log('✅ loadOverallUploadSummary completed');
+          } catch (error) {
+            console.error('❌ Error in loadOverallUploadSummary:', error);
+          }
         } else {
           const errorData = await response.json().catch(() => ({}));
           if (response.status === 403) {
